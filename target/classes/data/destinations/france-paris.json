@@ -1,0 +1,198 @@
+{
+  "destination": "France (Paris)",
+  "regions": [
+    {
+      "name": "Central Paris (1st-4th arrondissement)",
+      "description": "The historic heart — Louvre, Notre-Dame, Marais district, and the Île de la Cité",
+      "highlights": ["Louvre Museum", "Notre-Dame Cathedral", "Le Marais", "Sainte-Chapelle"],
+      "bestFor": "Art, history, architecture, walking"
+    },
+    {
+      "name": "Iconic Paris (7th-8th arrondissement)",
+      "description": "Home to the Eiffel Tower, Champs-Élysées, Arc de Triomphe, and Musée d'Orsay",
+      "highlights": ["Eiffel Tower", "Arc de Triomphe", "Champs-Élysées", "Musée d'Orsay"],
+      "bestFor": "Iconic landmarks, luxury shopping, Seine river walks"
+    },
+    {
+      "name": "Montmartre & Beyond (18th arrondissement)",
+      "description": "Bohemian hilltop village, Sacré-Cœur Basilica, artists' studios, and cabarets",
+      "highlights": ["Sacré-Cœur", "Place du Tertre", "Moulin Rouge", "Abbesses"],
+      "bestFor": "Art, village atmosphere, panoramic views, nightlife"
+    }
+  ],
+  "attractions": [
+    {
+      "name": "Eiffel Tower",
+      "description": "Paris's most iconic landmark — stunning at night when it sparkles every hour on the hour",
+      "neighborhood": "Champ de Mars",
+      "region": "Iconic Paris",
+      "entryFeeUSD": 30,
+      "durationMinutes": 120,
+      "category": "ICONIC",
+      "mustSee": true
+    },
+    {
+      "name": "Louvre Museum",
+      "description": "World's largest art museum with 35,000+ works including the Mona Lisa and Venus de Milo",
+      "neighborhood": "1st arrondissement",
+      "region": "Central Paris",
+      "entryFeeUSD": 22,
+      "durationMinutes": 240,
+      "category": "ART",
+      "mustSee": true
+    },
+    {
+      "name": "Notre-Dame Cathedral",
+      "description": "Magnificent Gothic cathedral on the Île de la Cité, currently under restoration after the 2019 fire",
+      "neighborhood": "Île de la Cité",
+      "region": "Central Paris",
+      "entryFeeUSD": 0,
+      "durationMinutes": 90,
+      "category": "CULTURAL",
+      "mustSee": true
+    },
+    {
+      "name": "Musée d'Orsay",
+      "description": "Stunning collection of Impressionist masterpieces (Monet, Renoir, Van Gogh) in a converted railway station",
+      "neighborhood": "7th arrondissement",
+      "region": "Iconic Paris",
+      "entryFeeUSD": 18,
+      "durationMinutes": 180,
+      "category": "ART",
+      "mustSee": true
+    },
+    {
+      "name": "Arc de Triomphe",
+      "description": "Napoleon's triumphal arch at the top of Champs-Élysées with panoramic city views from the top",
+      "neighborhood": "8th arrondissement",
+      "region": "Iconic Paris",
+      "entryFeeUSD": 16,
+      "durationMinutes": 60,
+      "category": "HISTORICAL",
+      "mustSee": false
+    },
+    {
+      "name": "Sacré-Cœur Basilica",
+      "description": "White Romano-Byzantine basilica atop Montmartre hill with the best free panoramic view of Paris",
+      "neighborhood": "Montmartre",
+      "region": "Montmartre & Beyond",
+      "entryFeeUSD": 0,
+      "durationMinutes": 60,
+      "category": "CULTURAL",
+      "mustSee": true
+    },
+    {
+      "name": "Palace of Versailles",
+      "description": "Magnificent royal palace 30 minutes from Paris — ornate Hall of Mirrors and vast formal gardens",
+      "neighborhood": "Versailles",
+      "region": "Day Trip",
+      "entryFeeUSD": 22,
+      "durationMinutes": 300,
+      "category": "HISTORICAL",
+      "mustSee": true
+    },
+    {
+      "name": "Le Marais District",
+      "description": "Paris's most fashionable historic quarter — medieval streets, galleries, Jewish quarter, and Place des Vosges",
+      "neighborhood": "3rd-4th arrondissement",
+      "region": "Central Paris",
+      "entryFeeUSD": 0,
+      "durationMinutes": 150,
+      "category": "CULTURE_FOOD",
+      "mustSee": true
+    },
+    {
+      "name": "Centre Pompidou",
+      "description": "Iconic inside-out building housing France's premier modern art museum with stunning rooftop views",
+      "neighborhood": "4th arrondissement",
+      "region": "Central Paris",
+      "entryFeeUSD": 16,
+      "durationMinutes": 180,
+      "category": "ART",
+      "mustSee": false
+    },
+    {
+      "name": "Seine River Cruise",
+      "description": "1-hour Bateaux Mouches boat cruise past all major landmarks — magical at sunset or at night",
+      "neighborhood": "Pont de l'Alma",
+      "region": "Iconic Paris",
+      "entryFeeUSD": 18,
+      "durationMinutes": 70,
+      "category": "EXPERIENCE",
+      "mustSee": true
+    }
+  ],
+  "seasonalTips": {
+    "january": {
+      "month": "January",
+      "weather": "Cold and grey, 3-8°C, occasional rain",
+      "crowdLevel": "LOW",
+      "notableEvents": ["Paris Couture Fashion Week", "Winter sales (soldes)"],
+      "packingTips": ["Warm coat", "Scarf and gloves", "Waterproof shoes"],
+      "pros": ["Smallest crowds at museums", "Lowest hotel prices of the year", "No queues at Eiffel Tower"],
+      "cons": ["Dreary weather", "Short days", "Some tourist sites have reduced hours"]
+    },
+    "april": {
+      "month": "April",
+      "weather": "Mild and variable, 8-17°C, frequent spring showers",
+      "crowdLevel": "HIGH",
+      "notableEvents": ["Paris Marathon", "Spring blooms in Luxembourg Gardens", "Easter"],
+      "packingTips": ["Light layers", "Compact umbrella", "Comfortable walking shoes"],
+      "pros": ["City looks beautiful with spring flowers", "Café terraces reopen", "Long daylight hours"],
+      "cons": ["Unpredictable rain", "Easter holidays bring crowds and closures", "Rising prices"]
+    },
+    "july": {
+      "month": "July",
+      "weather": "Warm and sunny, 18-28°C, occasional heat waves",
+      "crowdLevel": "VERY_HIGH",
+      "notableEvents": ["Bastille Day (July 14th)", "Paris Plages (Seine beach)"],
+      "packingTips": ["Light summer clothes", "Sunscreen", "Water bottle"],
+      "pros": ["Bastille Day fireworks are spectacular", "Outdoor concerts and events", "Long evenings"],
+      "cons": ["Extremely crowded and expensive", "Locals leave for holiday — some small restaurants close"]
+    },
+    "october": {
+      "month": "October",
+      "weather": "Mild and pleasant, 10-18°C, some rain",
+      "crowdLevel": "MEDIUM",
+      "notableEvents": ["Nuit Blanche (all-night art festival)", "Paris Jazz Festival wraps up"],
+      "packingTips": ["Light jacket", "Scarf", "Layers for variable temperatures"],
+      "pros": ["Beautiful autumn light", "Shoulder season prices", "Less crowded than summer"],
+      "cons": ["Days getting shorter", "Some outdoor terraces closing"]
+    }
+  },
+  "culturalTips": [
+    "Always greet with 'Bonjour' before asking anything — launching straight into English is considered rude",
+    "The French take dining seriously — budget 2 hours for a sit-down restaurant meal",
+    "Tipping is not obligatory but rounding up or leaving 5-10% is appreciated",
+    "Validate your Métro ticket before boarding — inspectors do check and fines are steep",
+    "Most museums are free on the first Sunday of each month — go early",
+    "Dress smartly — Parisians judge by appearance; avoid obvious tourist gear in upscale areas",
+    "Many smaller shops close for lunch from 12:30-2:30pm",
+    "La Bise (cheek kisses) is the standard greeting among people who know each other"
+  ],
+  "bestAreasToStay": {
+    "budget": {
+      "area": "11th or 13th arrondissement",
+      "description": "Lively local neighborhoods, excellent Métro links, budget hotels and hostels at $70-110/night",
+      "averageNightlyRateUSD": 90
+    },
+    "mid": {
+      "area": "Le Marais (4th) or Saint-Germain (6th)",
+      "description": "Central, walkable, 3-4 star hotels, close to major attractions, $160-280/night",
+      "averageNightlyRateUSD": 220
+    },
+    "luxury": {
+      "area": "1st arrondissement (near Louvre) or 8th (Champs-Élysées)",
+      "description": "Palace hotels, Eiffel Tower views, butler service, $400-1000+/night",
+      "averageNightlyRateUSD": 550
+    }
+  },
+  "neighborhoodGroups": {
+    "Central Classics": ["Louvre Museum", "Notre-Dame Cathedral", "Le Marais District"],
+    "Iconic Landmarks": ["Eiffel Tower", "Musée d'Orsay", "Seine River Cruise"],
+    "Champs-Élysées": ["Arc de Triomphe"],
+    "Montmartre": ["Sacré-Cœur Basilica"],
+    "Day Trip": ["Palace of Versailles"],
+    "Modern Art": ["Centre Pompidou"]
+  }
+}

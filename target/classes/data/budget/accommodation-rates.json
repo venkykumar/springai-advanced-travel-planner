@@ -1,0 +1,19 @@
+{
+  "rates": [
+    {"destination": "Japan", "tier": "BUDGET", "perNightUSD": 65, "examples": "Capsule hotels, guesthouses, hostels", "notes": "Book well ahead for cherry blossom season"},
+    {"destination": "Japan", "tier": "MID", "perNightUSD": 160, "examples": "Business hotels (Dormy Inn, APA), 3-star city hotels", "notes": "Breakfast often included"},
+    {"destination": "Japan", "tier": "LUXURY", "perNightUSD": 400, "examples": "Park Hyatt Tokyo, Aman Tokyo, traditional ryokan", "notes": "Ryokan rates include dinner and breakfast"},
+    {"destination": "France (Paris)", "tier": "BUDGET", "perNightUSD": 90, "examples": "Generator Paris, ibis, budget 2-star hotels", "notes": "Location matters — avoid outer arrondissements"},
+    {"destination": "France (Paris)", "tier": "MID", "perNightUSD": 220, "examples": "Mercure, 3-4 star boutique hotels in Marais or 6th", "notes": "Breakfast typically €15-25 extra"},
+    {"destination": "France (Paris)", "tier": "LUXURY", "perNightUSD": 550, "examples": "Le Meurice, Hotel Costes, boutique palace hotels", "notes": "Book 3-6 months ahead"},
+    {"destination": "Italy (Rome & Florence)", "tier": "BUDGET", "perNightUSD": 90, "examples": "Termini area hotels, guesthouses in Trastevere", "notes": "Avoid very cheapest near Termini — safety concerns"},
+    {"destination": "Italy (Rome & Florence)", "tier": "MID", "perNightUSD": 190, "examples": "3-star boutique hotels in Monti (Rome) or Santa Croce (Florence)", "notes": "Many include a good breakfast"},
+    {"destination": "Italy (Rome & Florence)", "tier": "LUXURY", "perNightUSD": 450, "examples": "Hotel de Russie (Rome), Portrait Firenze, Continentale", "notes": "Terrace and rooftop views worth the premium"},
+    {"destination": "Thailand", "tier": "BUDGET", "perNightUSD": 35, "examples": "Hostels on Khao San Road, guesthouses in old city", "notes": "Excellent value — air conditioning essential"},
+    {"destination": "Thailand", "tier": "MID", "perNightUSD": 90, "examples": "3-star hotels near BTS Skytrain, boutique guesthouses", "notes": "Pool access standard at mid-range"},
+    {"destination": "Thailand", "tier": "LUXURY", "perNightUSD": 250, "examples": "Mandarin Oriental Bangkok, Anantara, riverside resorts", "notes": "Some of the best value luxury in the world"},
+    {"destination": "Spain (Barcelona)", "tier": "BUDGET", "perNightUSD": 80, "examples": "Generator Barcelona, Sant Jordi hostels, budget hotels in El Raval", "notes": "Many budget spots walkable to Gothic Quarter"},
+    {"destination": "Spain (Barcelona)", "tier": "MID", "perNightUSD": 175, "examples": "Hotel Brummell, boutique hotels in El Born or Gràcia", "notes": "Rooftop terrace a bonus at this tier"},
+    {"destination": "Spain (Barcelona)", "tier": "LUXURY", "perNightUSD": 400, "examples": "Hotel Arts, W Barcelona, Mandarin Oriental Barcelona", "notes": "Waterfront or Passeig de Gràcia locations"}
+  ]
+}

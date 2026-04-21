@@ -1,0 +1,197 @@
+{
+  "destination": "Spain (Barcelona)",
+  "regions": [
+    {
+      "name": "Gothic Quarter & El Born",
+      "description": "Barcelona's medieval heart — labyrinthine Roman streets, Gothic cathedral, and El Born's trendy bars and boutiques",
+      "highlights": ["Barcelona Cathedral", "El Born Market", "Picasso Museum", "Plaça Reial"],
+      "bestFor": "Medieval history, nightlife, tapas, boutique shopping"
+    },
+    {
+      "name": "Eixample — Gaudí District",
+      "description": "19th-century grid district home to Gaudí's masterpieces — Sagrada Família, Casa Batlló, and Casa Milà",
+      "highlights": ["Sagrada Família", "Casa Batlló", "Casa Milà (La Pedrera)", "Passeig de Gràcia"],
+      "bestFor": "Modernist architecture, luxury shopping, upscale restaurants"
+    },
+    {
+      "name": "Barceloneta & Montjuïc",
+      "description": "Beach, Olympic stadium, castle, and Montjuïc gardens — Barcelona's outdoor playground",
+      "highlights": ["Barceloneta Beach", "Montjuïc Castle", "MNAC Museum", "Magic Fountain"],
+      "bestFor": "Beach days, panoramic views, outdoor activities"
+    }
+  ],
+  "attractions": [
+    {
+      "name": "Sagrada Família",
+      "description": "Gaudí's breathtaking unfinished basilica — a UNESCO World Heritage Site under construction since 1882, towering above the city",
+      "neighborhood": "Eixample",
+      "region": "Eixample — Gaudí District",
+      "entryFeeUSD": 30,
+      "durationMinutes": 150,
+      "category": "CULTURAL",
+      "mustSee": true
+    },
+    {
+      "name": "Park Güell",
+      "description": "Gaudí's fairy-tale hilltop park with mosaic terraces, curved colonnades, and panoramic city views",
+      "neighborhood": "Gràcia",
+      "region": "Eixample — Gaudí District",
+      "entryFeeUSD": 13,
+      "durationMinutes": 120,
+      "category": "ART_NATURE",
+      "mustSee": true
+    },
+    {
+      "name": "Casa Batlló",
+      "description": "Gaudí's dragon-spine masterpiece on Passeig de Gràcia — one of the world's most imaginative building facades",
+      "neighborhood": "Passeig de Gràcia",
+      "region": "Eixample — Gaudí District",
+      "entryFeeUSD": 38,
+      "durationMinutes": 90,
+      "category": "ART",
+      "mustSee": true
+    },
+    {
+      "name": "Gothic Quarter (Barri Gòtic)",
+      "description": "2,000-year-old Roman ruins embedded in medieval streets — Barcelona Cathedral, Temple d'August, and Plaça Reial",
+      "neighborhood": "Barri Gòtic",
+      "region": "Gothic Quarter & El Born",
+      "entryFeeUSD": 0,
+      "durationMinutes": 150,
+      "category": "HISTORICAL",
+      "mustSee": true
+    },
+    {
+      "name": "La Boqueria Market",
+      "description": "Barcelona's famous covered market on La Rambla — vibrant stalls of fresh produce, jamón, seafood, and smoothies",
+      "neighborhood": "La Rambla",
+      "region": "Gothic Quarter & El Born",
+      "entryFeeUSD": 0,
+      "durationMinutes": 60,
+      "category": "FOOD",
+      "mustSee": true
+    },
+    {
+      "name": "Picasso Museum",
+      "description": "Largest collection of Picasso's early works set across five medieval palaces — traces his formative years in Barcelona",
+      "neighborhood": "El Born",
+      "region": "Gothic Quarter & El Born",
+      "entryFeeUSD": 15,
+      "durationMinutes": 120,
+      "category": "ART",
+      "mustSee": false
+    },
+    {
+      "name": "Barceloneta Beach",
+      "description": "Barcelona's urban beach — 4.5km of golden sand, beach bars (chiringuitos), and Mediterranean vibes",
+      "neighborhood": "Barceloneta",
+      "region": "Barceloneta & Montjuïc",
+      "entryFeeUSD": 0,
+      "durationMinutes": 180,
+      "category": "NATURE",
+      "mustSee": true
+    },
+    {
+      "name": "Montjuïc Castle & Gardens",
+      "description": "Historic hilltop fortress with sweeping harbour views — reachable by cable car for extra drama",
+      "neighborhood": "Montjuïc",
+      "region": "Barceloneta & Montjuïc",
+      "entryFeeUSD": 9,
+      "durationMinutes": 150,
+      "category": "HISTORICAL",
+      "mustSee": false
+    },
+    {
+      "name": "Casa Milà (La Pedrera)",
+      "description": "Gaudí's undulating apartment building on Passeig de Gràcia — the rooftop terrace with warrior chimney stacks is iconic",
+      "neighborhood": "Passeig de Gràcia",
+      "region": "Eixample — Gaudí District",
+      "entryFeeUSD": 28,
+      "durationMinutes": 90,
+      "category": "ART",
+      "mustSee": false
+    },
+    {
+      "name": "El Born & Palau de la Música",
+      "description": "Trendy neighbourhood with tapas bars, and the breathtaking Art Nouveau concert hall built in 1908",
+      "neighborhood": "El Born",
+      "region": "Gothic Quarter & El Born",
+      "entryFeeUSD": 22,
+      "durationMinutes": 90,
+      "category": "ART",
+      "mustSee": true
+    }
+  ],
+  "seasonalTips": {
+    "january": {
+      "month": "January",
+      "weather": "Mild for Europe, 8-15°C, some rain",
+      "crowdLevel": "LOW",
+      "notableEvents": ["Three Kings Parade (Jan 5th)", "Winter sales"],
+      "packingTips": ["Light jacket", "Layers", "Comfortable shoes"],
+      "pros": ["Almost no tourist queues at Sagrada Família or Park Güell", "Cheapest hotel prices", "Locals-focused experience"],
+      "cons": ["Some beach activities not possible", "Occasional rain", "Shorter days"]
+    },
+    "april": {
+      "month": "April",
+      "weather": "Warm and pleasant, 14-20°C, some showers",
+      "crowdLevel": "HIGH",
+      "notableEvents": ["Semana Santa (Holy Week)", "Sant Jordi Day (April 23rd — Barcelona's Valentine's Day)"],
+      "packingTips": ["Light layers", "Umbrella", "Comfortable walking shoes"],
+      "pros": ["Sant Jordi Day is magical — city fills with books and roses", "Great weather for exploring", "Easter events"],
+      "cons": ["Easter week is very crowded", "Higher prices", "Book Sagrada Família months ahead"]
+    },
+    "july": {
+      "month": "July",
+      "weather": "Hot and sunny, 25-32°C",
+      "crowdLevel": "VERY_HIGH",
+      "notableEvents": ["Grec Festival (arts festival)", "Beach season in full swing"],
+      "packingTips": ["Summer clothes", "Sunscreen", "Stay hydrated"],
+      "pros": ["Beach weather is perfect", "Outdoor concerts and festivals", "Long daylight until 9pm"],
+      "cons": ["Most crowded and expensive month", "Very hot midday — siesta time is real", "Pickpocket risk highest"]
+    },
+    "october": {
+      "month": "October",
+      "weather": "Pleasant and mild, 15-22°C, golden light",
+      "crowdLevel": "MEDIUM",
+      "notableEvents": ["La Merce Festival wraps up", "Sitges Film Festival"],
+      "packingTips": ["Light jacket for evenings", "Layers"],
+      "pros": ["Excellent weather", "No oppressive heat", "Crowds thinning", "Still warm enough for beach"],
+      "cons": ["Days shortening", "Some beach bars closing"]
+    }
+  },
+  "culturalTips": [
+    "Dinner in Barcelona starts at 9-10pm — arriving at 7pm marks you as a tourist; restaurants often aren't fully open until 8:30pm",
+    "The Catalan people are proud of their distinct identity — saying 'Gràcies' (Catalan) instead of 'Gracias' is appreciated",
+    "Book Sagrada Família and Casa Batlló tickets weeks or months in advance — they regularly sell out",
+    "Tapas are meant for sharing — order several small plates and share across the table",
+    "Las Ramblas is tourist-heavy and a pickpocket hotspot — keep valuables secure and explore the side streets",
+    "Sunday mornings are quiet and atmospheric — perfect for Gothic Quarter walks before crowds arrive",
+    "The beach is walkable from the Gothic Quarter — it is free and easily accessible",
+    "Patxaran and Cava (Catalan sparkling wine) are the local drinks — order them confidently"
+  ],
+  "bestAreasToStay": {
+    "budget": {
+      "area": "El Raval or Poble Sec",
+      "description": "Affordable, well-connected, genuine neighbourhood feel, $60-100/night",
+      "averageNightlyRateUSD": 80
+    },
+    "mid": {
+      "area": "El Born or Gràcia",
+      "description": "Charming, central, boutique hotels, close to Gothic Quarter and Eixample, $130-220/night",
+      "averageNightlyRateUSD": 175
+    },
+    "luxury": {
+      "area": "Passeig de Gràcia or Barceloneta waterfront",
+      "description": "Design hotels, rooftop pools, sea or city views, $280-600/night",
+      "averageNightlyRateUSD": 400
+    }
+  },
+  "neighborhoodGroups": {
+    "Gaudí Circuit": ["Sagrada Família", "Park Güell", "Casa Batlló", "Casa Milà (La Pedrera)"],
+    "Gothic Quarter": ["Gothic Quarter (Barri Gòtic)", "La Boqueria Market"],
+    "El Born": ["Picasso Museum", "El Born & Palau de la Música"],
+    "Waterfront": ["Barceloneta Beach"],
+    "Montjuïc": ["Montjuïc Castle & Gardens"]
+  }
+}

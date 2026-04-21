@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Travel Itinerary Planner — Spring AI Multi-Agent Demo</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f4f8; color: #2d3748; }
+  .header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 24px 32px; }
+  .header h1 { font-size: 1.8rem; font-weight: 700; }
+  .header p { opacity: 0.85; margin-top: 6px; font-size: 0.95rem; }
+  .badge { display: inline-block; background: rgba(255,255,255,0.2); border-radius: 12px; padding: 2px 10px; font-size: 0.75rem; margin-left: 8px; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+  .card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  .card h2 { font-size: 1.1rem; font-weight: 600; color: #4a5568; margin-bottom: 16px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+  textarea { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; resize: vertical; font-family: inherit; min-height: 80px; }
+  textarea:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.15); }
+  input[type=text] { width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem; font-family: inherit; }
+  input[type=text]:focus { outline: none; border-color: #667eea; }
+  .btn { padding: 11px 24px; border: none; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+  .btn-primary { background: #667eea; color: white; }
+  .btn-primary:hover { background: #5a6fd6; }
+  .btn-secondary { background: #e2e8f0; color: #4a5568; margin-left: 8px; }
+  .btn-secondary:hover { background: #cbd5e0; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .examples { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .example-chip { background: #ebf4ff; color: #2b6cb0; border: 1px solid #bee3f8; border-radius: 20px; padding: 5px 14px; font-size: 0.82rem; cursor: pointer; }
+  .example-chip:hover { background: #bee3f8; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  label { display: block; font-size: 0.82rem; font-weight: 600; color: #718096; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .spinner { display: none; text-align: center; padding: 40px; }
+  .spinner.active { display: block; }
+  .spinner-ring { width: 48px; height: 48px; border: 4px solid #e2e8f0; border-top-color: #667eea; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .status-bar { background: #ebf8ff; border: 1px solid #bee3f8; border-radius: 8px; padding: 12px 16px; font-size: 0.88rem; color: #2b6cb0; margin-bottom: 12px; display: none; }
+  .status-bar.active { display: block; }
+  /* Result sections */
+  .result { display: none; }
+  .result.active { display: block; }
+  .plan-header { background: linear-gradient(135deg, #48bb78, #38a169); color: white; border-radius: 10px; padding: 20px 24px; margin-bottom: 20px; }
+  .plan-header h2 { font-size: 1.5rem; font-weight: 700; }
+  .plan-meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 10px; font-size: 0.88rem; opacity: 0.9; }
+  .meta-pill { background: rgba(255,255,255,0.2); padding: 3px 10px; border-radius: 12px; }
+  .budget-card { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+  .budget-item { background: #f7fafc; border-radius: 8px; padding: 12px; text-align: center; }
+  .budget-item .amount { font-size: 1.3rem; font-weight: 700; color: #2d3748; }
+  .budget-item .label { font-size: 0.75rem; color: #718096; margin-top: 2px; text-transform: uppercase; }
+  .budget-tier { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; margin-left: 8px; }
+  .tier-BUDGET { background: #c6f6d5; color: #276749; }
+  .tier-MID { background: #bee3f8; color: #2c5282; }
+  .tier-LUXURY { background: #fed7e2; color: #97266d; }
+  .within-budget-yes { color: #276749; font-weight: 700; }
+  .within-budget-no { color: #c53030; font-weight: 700; }
+  /* Days */
+  .day-tab-bar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+  .day-tab { padding: 6px 14px; border-radius: 20px; background: #e2e8f0; border: none; cursor: pointer; font-size: 0.85rem; font-weight: 600; }
+  .day-tab.active { background: #667eea; color: white; }
+  .day-plan { display: none; }
+  .day-plan.active { display: block; }
+  .day-header { font-size: 1.1rem; font-weight: 700; margin-bottom: 14px; color: #2d3748; }
+  .time-block { border-left: 3px solid #e2e8f0; padding-left: 14px; margin-bottom: 12px; }
+  .time-block.morning { border-color: #f6ad55; }
+  .time-block.afternoon { border-color: #48bb78; }
+  .time-block.evening { border-color: #667eea; }
+  .time-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #718096; margin-bottom: 4px; }
+  .activity { font-size: 0.9rem; padding: 2px 0; }
+  .food-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; background: #f7fafc; border-radius: 8px; padding: 12px; }
+  .food-item .food-label { font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: #718096; }
+  .food-item .food-value { font-size: 0.9rem; margin-top: 2px; }
+  .day-footer { display: flex; justify-content: space-between; margin-top: 12px; font-size: 0.85rem; color: #718096; background: #f7fafc; padding: 10px 14px; border-radius: 8px; }
+  /* Trace */
+  .trace-toggle { background: none; border: none; cursor: pointer; color: #667eea; font-size: 0.88rem; font-weight: 600; padding: 0; }
+  .trace-content { display: none; margin-top: 12px; }
+  .trace-content.open { display: block; }
+  .trace-step { display: grid; grid-template-columns: 160px 140px 1fr 1fr 80px; gap: 8px; align-items: start; padding: 10px 12px; border-radius: 8px; font-size: 0.82rem; margin-bottom: 6px; }
+  .trace-step.parallel { background: #ebf8ff; border-left: 3px solid #4299e1; }
+  .trace-step.sequential { background: #f7fafc; border-left: 3px solid #a0aec0; }
+  .trace-step.retry { background: #fff5f5; border-left: 3px solid #fc8181; }
+  .trace-agent { font-weight: 700; color: #2d3748; }
+  .trace-action { color: #4a5568; font-family: monospace; }
+  .trace-input { color: #718096; overflow: hidden; text-overflow: ellipsis; }
+  .trace-output { color: #276749; overflow: hidden; text-overflow: ellipsis; }
+  .trace-dur { text-align: right; color: #a0aec0; white-space: nowrap; }
+  .parallel-badge { background: #bee3f8; color: #2c5282; font-size: 0.7rem; padding: 1px 6px; border-radius: 8px; display: inline-block; }
+  .tips-list { list-style: none; }
+  .tips-list li { padding: 6px 0; font-size: 0.9rem; border-bottom: 1px solid #f0f4f8; }
+  .tips-list li::before { content: "✓ "; color: #48bb78; font-weight: 700; }
+  .error { background: #fff5f5; border: 1px solid #feb2b2; color: #c53030; border-radius: 8px; padding: 14px; margin-bottom: 16px; display: none; }
+  .error.active { display: block; }
+  .conv-id-display { font-family: monospace; font-size: 0.82rem; color: #718096; background: #f7fafc; padding: 4px 10px; border-radius: 6px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>✈️ Travel Itinerary Planner <span class="badge">Spring AI Multi-Agent</span></h1>
+  <p>5 specialist AI agents • Parallel execution • JDBC memory • PgVector RAG • Budget ReAct loop</p>
+</div>
+
+<div class="container">
+
+  <!-- Input card -->
+  <div class="card">
+    <h2>Plan Your Trip</h2>
+    <div style="margin-bottom:12px">
+      <label>Your Query</label>
+      <textarea id="query" placeholder="e.g. Plan a 7-day trip to Japan in April for a family of 4 with a $5000 budget"></textarea>
+    </div>
+    <div class="examples">
+      <span class="example-chip" onclick="setQuery(this)">Japan 7 days April family of 4 $5000</span>
+      <span class="example-chip" onclick="setQuery(this)">Paris 5 days June 2 people $4000</span>
+      <span class="example-chip" onclick="setQuery(this)">Thailand 10 days January solo $3000</span>
+      <span class="example-chip" onclick="setQuery(this)">Barcelona 6 days July couple $6000</span>
+      <span class="example-chip" onclick="setQuery(this)">Italy Rome Florence 8 days April family of 3 $7000</span>
+    </div>
+    <div class="row" style="margin-top:16px">
+      <div>
+        <label>Conversation ID <span style="font-weight:400;text-transform:none">(leave blank for new trip)</span></label>
+        <input type="text" id="convId" placeholder="Auto-generated for new trips">
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:8px">
+        <button class="btn btn-primary" onclick="planTrip()" id="planBtn">Plan Trip</button>
+        <button class="btn btn-secondary" onclick="clearAll()">Clear</button>
+      </div>
+    </div>
+
+    <!-- Follow-up section -->
+    <div style="margin-top:16px; border-top:1px solid #e2e8f0; padding-top:16px;">
+      <label>Follow-up Request <span style="font-weight:400;text-transform:none">(requires a Conversation ID above)</span></label>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <input type="text" id="followupQuery" placeholder='e.g. "Make day 3 a food tour" or "Make it more budget-friendly"' style="flex:1">
+        <button class="btn btn-secondary" onclick="followUp()" id="followupBtn">Follow Up</button>
+      </div>
+      <div class="examples" style="margin-top:8px">
+        <span class="example-chip" onclick="setFollowup(this)">Make day 3 a food tour</span>
+        <span class="example-chip" onclick="setFollowup(this)">Make it more budget-friendly</span>
+        <span class="example-chip" onclick="setFollowup(this)">Add a beach day somewhere</span>
+        <span class="example-chip" onclick="setFollowup(this)">What should we pack?</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div class="error" id="errorBox"></div>
+
+  <!-- Spinner -->
+  <div class="spinner" id="spinner">
+    <div class="spinner-ring"></div>
+    <div id="spinnerMsg" style="color:#718096">Dispatching agents in parallel...</div>
+  </div>
+
+  <!-- Result -->
+  <div class="result" id="result">
+
+    <!-- Plan header -->
+    <div class="plan-header" id="planHeader"></div>
+
+    <!-- Budget breakdown -->
+    <div class="card" id="budgetCard">
+      <h2>Budget Breakdown</h2>
+      <div class="budget-card" id="budgetGrid"></div>
+      <div id="tradeOffNotes" style="margin-top:12px;font-size:0.88rem;color:#4a5568;background:#f7fafc;padding:10px 14px;border-radius:8px;"></div>
+    </div>
+
+    <!-- Itinerary -->
+    <div class="card">
+      <h2>Day-by-Day Itinerary</h2>
+      <div class="day-tab-bar" id="dayTabs"></div>
+      <div id="dayPlans"></div>
+    </div>
+
+    <!-- Cultural tips -->
+    <div class="card" id="tipsCard">
+      <h2>Cultural Tips & Etiquette</h2>
+      <ul class="tips-list" id="tipsList"></ul>
+    </div>
+
+    <!-- Agent trace -->
+    <div class="card">
+      <h2>Agent Trace <button class="trace-toggle" onclick="toggleTrace()">▶ Show execution steps</button></h2>
+      <div id="traceContent" class="trace-content">
+        <div style="display:grid;grid-template-columns:160px 140px 1fr 1fr 80px;gap:8px;font-size:0.75rem;font-weight:700;text-transform:uppercase;color:#a0aec0;padding:0 12px;margin-bottom:4px">
+          <span>Agent</span><span>Action</span><span>Input</span><span>Output</span><span style="text-align:right">Duration</span>
+        </div>
+        <div id="traceSteps"></div>
+        <div id="traceSummary" style="margin-top:12px;font-size:0.85rem;color:#718096;background:#f7fafc;padding:10px;border-radius:8px;"></div>
+      </div>
+    </div>
+
+    <!-- Conversation ID -->
+    <div style="text-align:right;margin-top:8px">
+      <span style="font-size:0.82rem;color:#a0aec0">Conversation ID: </span>
+      <span class="conv-id-display" id="convIdDisplay"></span>
+    </div>
+
+  </div>
+</div>
+
+<script>
+let currentConvId = null;
+const spinnerMessages = [
+  'Dispatching agents in parallel...',
+  'DestinationResearchAgent: researching attractions and seasonal tips...',
+  'LogisticsAgent: checking flights and transport options...',
+  'BudgetAgent: calculating cost breakdown and tier...',
+  'Checking if budget fits — may re-query for lower tier...',
+  'ItineraryBuilderAgent: building day-by-day schedule...',
+  'OrchestratorAgent: synthesising final travel plan...'
+];
+let spinnerIdx = 0, spinnerTimer;
+
+function setQuery(chip) {
+  document.getElementById('query').value = 'Plan a 7-day trip to ' + chip.textContent;
+}
+function setFollowup(chip) {
+  document.getElementById('followupQuery').value = chip.textContent;
+}
+function clearAll() {
+  document.getElementById('query').value = '';
+  document.getElementById('convId').value = '';
+  document.getElementById('followupQuery').value = '';
+  document.getElementById('result').classList.remove('active');
+  document.getElementById('errorBox').classList.remove('active');
+  currentConvId = null;
+}
+
+async function planTrip() {
+  const query = document.getElementById('query').value.trim();
+  if (!query) return alert('Please enter a travel query.');
+  const convId = document.getElementById('convId').value.trim() || crypto.randomUUID();
+  currentConvId = convId;
+  await callApi('/api/travel/plan', { userQuery: query, conversationId: convId });
+}
+
+async function followUp() {
+  const fq = document.getElementById('followupQuery').value.trim();
+  if (!fq) return alert('Please enter a follow-up question.');
+  const convId = document.getElementById('convId').value.trim() || currentConvId;
+  if (!convId) return alert('A Conversation ID is required for follow-up requests. Run a plan first.');
+  currentConvId = convId;
+  await callApi('/api/travel/followup', { userQuery: fq, conversationId: convId });
+}
+
+async function callApi(url, body) {
+  showSpinner();
+  hideError();
+  document.getElementById('result').classList.remove('active');
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(err || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    renderResult(data);
+  } catch (e) {
+    showError(e.message);
+  } finally {
+    hideSpinner();
+  }
+}
+
+function showSpinner() {
+  document.getElementById('spinner').classList.add('active');
+  document.getElementById('planBtn').disabled = true;
+  document.getElementById('followupBtn').disabled = true;
+  spinnerIdx = 0;
+  spinnerTimer = setInterval(() => {
+    spinnerIdx = (spinnerIdx + 1) % spinnerMessages.length;
+    document.getElementById('spinnerMsg').textContent = spinnerMessages[spinnerIdx];
+  }, 2200);
+}
+function hideSpinner() {
+  clearInterval(spinnerTimer);
+  document.getElementById('spinner').classList.remove('active');
+  document.getElementById('planBtn').disabled = false;
+  document.getElementById('followupBtn').disabled = false;
+}
+function showError(msg) {
+  const el = document.getElementById('errorBox');
+  el.textContent = '⚠ ' + msg;
+  el.classList.add('active');
+}
+function hideError() {
+  document.getElementById('errorBox').classList.remove('active');
+}
+
+function renderResult(response) {
+  const plan = response.travelPlan;
+  const req = plan.travelRequest;
+
+  // Conversation ID
+  document.getElementById('convId').value = response.conversationId;
+  document.getElementById('convIdDisplay').textContent = response.conversationId;
+
+  // Plan header
+  if (req) {
+    const header = document.getElementById('planHeader');
+    header.innerHTML = `
+      <h2>${plan.destination}</h2>
+      <div class="plan-meta">
+        <span class="meta-pill">📅 ${req.durationDays} days</span>
+        <span class="meta-pill">👥 ${req.travelers} travelers</span>
+        <span class="meta-pill">📆 ${req.travelMonth}</span>
+        <span class="meta-pill">💰 Budget $${req.budgetUSD?.toLocaleString()}</span>
+        ${req.preferences?.length ? '<span class="meta-pill">✨ ' + req.preferences.join(', ') + '</span>' : ''}
+      </div>`;
+  } else {
+    document.getElementById('planHeader').innerHTML = `<h2>${plan.destination || 'Follow-up Response'}</h2>`;
+  }
+
+  // Budget
+  const bd = plan.budgetBreakdown;
+  if (bd) {
+    const tier = bd.tier || 'MID';
+    const withinClass = bd.isWithinBudget ? 'within-budget-yes' : 'within-budget-no';
+    const withinText = bd.isWithinBudget ? '✓ Within Budget' : '✗ Over Budget';
+    document.getElementById('budgetGrid').innerHTML = `
+      <div class="budget-item"><div class="amount">$${fmt(bd.flightsCostTotal)}</div><div class="label">Flights (total)</div></div>
+      <div class="budget-item"><div class="amount">$${fmt(bd.accommodationPerNight)}/night</div><div class="label">Accommodation</div></div>
+      <div class="budget-item"><div class="amount">$${fmt(bd.mealsTotal)}</div><div class="label">Meals (total)</div></div>
+      <div class="budget-item"><div class="amount">$${fmt(bd.activitiesTotal)}</div><div class="label">Activities</div></div>
+      <div class="budget-item"><div class="amount">$${fmt(bd.grandTotal)}</div><div class="label">Grand Total <span class="budget-tier tier-${tier}">${tier}</span></div></div>
+      <div class="budget-item"><div class="amount ${withinClass}">${withinText}</div><div class="label">$${fmt(Math.abs(bd.budgetRemaining))} ${bd.budgetRemaining >= 0 ? 'remaining' : 'over'}</div></div>`;
+    document.getElementById('tradeOffNotes').textContent = bd.tradeOffNotes || '';
+    document.getElementById('budgetCard').style.display = '';
+  } else {
+    document.getElementById('budgetCard').style.display = 'none';
+  }
+
+  // Day plans
+  const tabs = document.getElementById('dayTabs');
+  const plans = document.getElementById('dayPlans');
+  tabs.innerHTML = ''; plans.innerHTML = '';
+  const days = plan.dayPlans || [];
+  if (days.length) {
+    days.forEach((day, i) => {
+      const tab = document.createElement('button');
+      tab.className = 'day-tab' + (i === 0 ? ' active' : '');
+      tab.textContent = 'Day ' + day.dayNumber;
+      tab.onclick = () => {
+        document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.day-plan').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('day-' + i).classList.add('active');
+      };
+      tabs.appendChild(tab);
+
+      const dp = document.createElement('div');
+      dp.className = 'day-plan' + (i === 0 ? ' active' : '');
+      dp.id = 'day-' + i;
+      dp.innerHTML = `
+        <div class="day-header">Day ${day.dayNumber}: ${day.theme || ''}</div>
+        <div class="time-block morning">
+          <div class="time-label">☀ Morning</div>
+          ${(day.morningActivities || []).map(a => '<div class="activity">• ' + a + '</div>').join('')}
+        </div>
+        <div class="time-block afternoon">
+          <div class="time-label">🌤 Afternoon</div>
+          ${(day.afternoonActivities || []).map(a => '<div class="activity">• ' + a + '</div>').join('')}
+        </div>
+        <div class="time-block evening">
+          <div class="time-label">🌙 Evening</div>
+          ${(day.eveningActivities || []).map(a => '<div class="activity">• ' + a + '</div>').join('')}
+        </div>
+        <div class="food-row">
+          <div class="food-item"><div class="food-label">🍽 Lunch</div><div class="food-value">${day.lunchRecommendation || '—'}</div></div>
+          <div class="food-item"><div class="food-label">🍷 Dinner</div><div class="food-value">${day.dinnerRecommendation || '—'}</div></div>
+        </div>
+        <div class="day-footer">
+          <span>🏨 ${day.accommodation || '—'}</span>
+          <span>💸 ~$${fmt(day.estimatedDailySpendPerPerson)}/person</span>
+        </div>
+        ${day.notes ? '<div style="margin-top:10px;font-size:0.85rem;color:#718096;font-style:italic">📌 ' + day.notes + '</div>' : ''}`;
+      plans.appendChild(dp);
+    });
+  }
+
+  // Cultural tips
+  const tips = plan.culturalTips || [];
+  if (tips.length) {
+    document.getElementById('tipsList').innerHTML = tips.map(t => '<li>' + t + '</li>').join('');
+    document.getElementById('tipsCard').style.display = '';
+  } else {
+    document.getElementById('tipsCard').style.display = 'none';
+  }
+
+  // Trace
+  const traceSteps = plan.agentTrace?.steps || [];
+  document.getElementById('traceSteps').innerHTML = traceSteps.map(s => {
+    const cls = s.action?.includes('retry') ? 'retry' : s.parallel ? 'parallel' : 'sequential';
+    return `<div class="trace-step ${cls}">
+      <span class="trace-agent">${s.agentName} ${s.parallel ? '<span class="parallel-badge">∥ parallel</span>' : ''}</span>
+      <span class="trace-action">${s.action}</span>
+      <span class="trace-input">${s.inputSummary || ''}</span>
+      <span class="trace-output">${s.outputSummary || ''}</span>
+      <span class="trace-dur">${s.durationMs}ms</span>
+    </div>`;
+  }).join('');
+
+  const at = plan.agentTrace;
+  if (at) {
+    document.getElementById('traceSummary').innerHTML =
+      `Total: <strong>${at.totalDurationMs}ms</strong> | Parallel agents: <strong>${at.parallelTaskCount}</strong> | Budget retries: <strong>${at.budgetRetriesUsed}</strong> | Steps: <strong>${traceSteps.length}</strong>`;
+  }
+
+  document.getElementById('result').classList.add('active');
+}
+
+function toggleTrace() {
+  const c = document.getElementById('traceContent');
+  const btn = document.querySelector('.trace-toggle');
+  const open = c.classList.toggle('open');
+  btn.textContent = (open ? '▼ Hide' : '▶ Show') + ' execution steps';
+}
+
+function fmt(n) {
+  if (n == null) return '0';
+  return Math.round(n).toLocaleString();
+}
+</script>
+</body>
+</html>

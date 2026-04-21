@@ -1,0 +1,19 @@
+{
+  "mealCosts": [
+    {"destination": "Japan", "tier": "BUDGET", "breakfastUSD": 5, "lunchUSD": 10, "dinnerUSD": 15, "notes": "Konbini breakfast, ramen lunch, izakaya dinner"},
+    {"destination": "Japan", "tier": "MID", "breakfastUSD": 15, "lunchUSD": 20, "dinnerUSD": 40, "notes": "Hotel breakfast, teishoku lunch set, sit-down Japanese dinner"},
+    {"destination": "Japan", "tier": "LUXURY", "breakfastUSD": 30, "lunchUSD": 50, "dinnerUSD": 120, "notes": "Hotel breakfast, kaiseki or sushi lunch, fine dining dinner"},
+    {"destination": "France (Paris)", "tier": "BUDGET", "breakfastUSD": 5, "lunchUSD": 15, "dinnerUSD": 22, "notes": "Boulangerie croissant, brasserie plat du jour, neighbourhood bistro"},
+    {"destination": "France (Paris)", "tier": "MID", "breakfastUSD": 15, "lunchUSD": 28, "dinnerUSD": 55, "notes": "Café breakfast, wine-paired lunch, mid-range bistro dinner"},
+    {"destination": "France (Paris)", "tier": "LUXURY", "breakfastUSD": 35, "lunchUSD": 70, "dinnerUSD": 180, "notes": "Hotel breakfast, Michelin-recommended lunch, fine dining dinner"},
+    {"destination": "Italy (Rome & Florence)", "tier": "BUDGET", "breakfastUSD": 4, "lunchUSD": 12, "dinnerUSD": 20, "notes": "Standing bar espresso and cornetto, trattoria pasta, local pizza al taglio"},
+    {"destination": "Italy (Rome & Florence)", "tier": "MID", "breakfastUSD": 12, "lunchUSD": 22, "dinnerUSD": 45, "notes": "Café breakfast, trattoria two-course lunch, wine-paired dinner"},
+    {"destination": "Italy (Rome & Florence)", "tier": "LUXURY", "breakfastUSD": 30, "lunchUSD": 60, "dinnerUSD": 150, "notes": "Hotel breakfast, enoteca lunch, fine dining Italian dinner"},
+    {"destination": "Thailand", "tier": "BUDGET", "breakfastUSD": 3, "lunchUSD": 5, "dinnerUSD": 8, "notes": "Street food pad thai, market noodles, night market dinner — incredible value"},
+    {"destination": "Thailand", "tier": "MID", "breakfastUSD": 8, "lunchUSD": 12, "dinnerUSD": 20, "notes": "Hotel breakfast buffet, air-con restaurant lunch, riverside dinner"},
+    {"destination": "Thailand", "tier": "LUXURY", "breakfastUSD": 25, "lunchUSD": 30, "dinnerUSD": 80, "notes": "Resort breakfast, rooftop lunch, fine Thai or international dinner"},
+    {"destination": "Spain (Barcelona)", "tier": "BUDGET", "breakfastUSD": 5, "lunchUSD": 12, "dinnerUSD": 18, "notes": "Café con leche and toast, menú del día (best value in Europe), tapas bar"},
+    {"destination": "Spain (Barcelona)", "tier": "MID", "breakfastUSD": 12, "lunchUSD": 25, "dinnerUSD": 45, "notes": "Hotel breakfast, 3-course lunch with wine, tapas dinner in El Born"},
+    {"destination": "Spain (Barcelona)", "tier": "LUXURY", "breakfastUSD": 25, "lunchUSD": 60, "dinnerUSD": 140, "notes": "Hotel breakfast, wine-paired lunch, creative Catalan fine dining"}
+  ]
+}

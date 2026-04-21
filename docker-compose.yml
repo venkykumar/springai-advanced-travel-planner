@@ -1,0 +1,44 @@
+services:
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: travel-planner-postgres
+    environment:
+      POSTGRES_DB: travelplanner
+      POSTGRES_USER: ${POSTGRES_USER:-traveluser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-travelpass}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./src/main/resources/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-traveluser} -d travelplanner"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Optional — run the Spring Boot app in Docker too
+  # Usage: docker compose --profile app up
+  app:
+    profiles: [app]
+    build: .
+    container_name: travel-planner-app
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/travelplanner
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-traveluser}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-travelpass}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      SPRING_AI_ACTIVE_MODEL: ${SPRING_AI_ACTIVE_MODEL:-openai}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+    driver: local
