@@ -1,8 +1,8 @@
 # Spring AI Advanced — Multi-Agent Travel Itinerary Planner
 
-An advanced Spring AI showcase demonstrating **multi-agent orchestration**, built as a companion to [springai-starter](../springai-starter). Where the starter covers the fundamentals (chat, streaming, RAG, tool calling, MCP), this project goes deeper — multiple specialised AI agents working in parallel, persistent memory across restarts, and a production-grade vector store.
+An advanced Spring AI showcase demonstrating **multi-agent orchestration** and **LangGraph human-in-the-loop workflows**, built as a companion to [springai-starter](../springai-starter). Where the starter covers the fundamentals (chat, streaming, RAG, tool calling, MCP), this project goes deeper — multiple specialised AI agents working in parallel, persistent memory across restarts, a production-grade vector store, and a stateful interruptible graph built with LangGraph4j.
 
-**Tech stack:** Java 25 · Spring Boot 3.5 · Spring AI 1.1.4 · PostgreSQL + pgvector · MCP client/server · Docker Compose
+**Tech stack:** Java 25 · Spring Boot 3.5 · Spring AI 1.1.4 · LangGraph4j 1.8.13 · PostgreSQL + pgvector · MCP client/server · Docker Compose
 
 ---
 
@@ -19,6 +19,69 @@ An advanced Spring AI showcase demonstrating **multi-agent orchestration**, buil
 | Observability | None | `AgentTrace` in every response shows every step |
 | Infrastructure | None | Docker Compose (Postgres + pgvector) |
 | External data | None | MCP client/server — live currency exchange rates |
+| Workflow orchestration | None | LangGraph4j `StateGraph` — stateful, interruptible, resumable |
+| Human-in-the-loop | None | Graph pauses mid-flow for user approval before building itinerary |
+
+---
+
+## LangGraph Human-in-the-Loop Flow
+
+The project includes a second planning mode built on **LangGraph4j** that demonstrates stateful, interruptible agent graphs — something Spring AI's `ChatClient` pattern alone cannot express.
+
+### The problem it solves
+
+The classic `/api/travel/plan` endpoint is fully automated: all agents run and the finished itinerary is returned in one call. There's no way to inspect the budget estimate mid-flight and decide whether to proceed. With LangGraph4j, the same agents are wired into a `StateGraph` that can **pause at a defined node, checkpoint its state, and resume later**.
+
+### Graph topology
+
+```
+START
+  → parse_query            LLM parses "7 days Japan $5000" → typed TravelRequest
+  → research_and_estimate  destination + logistics in parallel, then budget estimate
+  → [INTERRUPT]            ← graph pauses; budget summary returned to caller
+  → human_review           recalculates budget if user adjusted, otherwise pass-through
+  → build_itinerary        full day-by-day itinerary
+END
+```
+
+The `MemorySaver` checkpointer serialises the entire graph state (keyed by `threadId`) at the interruption point. When the user calls `/approve` or `/adjust`, the framework deserialises the checkpoint and continues from `human_review` — nothing is re-computed.
+
+### API flow
+
+```bash
+# 1. Start — graph runs parse_query + research_and_estimate, then pauses
+curl -X POST http://localhost:8080/api/graph/trips/start \
+  -H "Content-Type: application/json" \
+  -d '{"userQuery": "Plan 7 days in Japan for 2 people, budget $5000"}'
+# → { "threadId": "abc-123", "destination": "Japan", "budgetEstimateUSD": 4850.0,
+#     "budgetTier": "MID", "isWithinBudget": true, "message": "..." }
+
+# 2a. Accept the budget — graph resumes and builds the itinerary
+curl -X POST http://localhost:8080/api/graph/trips/abc-123/approve
+
+# 2b. Or adjust the budget first — graph injects new value, recalculates, builds
+curl -X POST http://localhost:8080/api/graph/trips/abc-123/adjust \
+  -H "Content-Type: application/json" \
+  -d '{"newBudgetUSD": 3500}'
+
+# Inspect current graph state at any time (which node is next, what's been computed)
+curl http://localhost:8080/api/graph/trips/abc-123/status
+```
+
+### Key LangGraph4j concepts demonstrated
+
+| Concept | Where it appears |
+|---|---|
+| `StateGraph` with typed `AgentState` | `TravelPlanningState` holds all inter-node data as JSON strings |
+| Node actions (`AsyncNodeAction`) | Each of the 4 nodes is an async lambda returning `Map<String, Object>` updates |
+| `interruptBefore` | Graph pauses before `human_review`; state is checkpointed to `MemorySaver` |
+| `invoke(GraphInput.resume(), config)` | `/approve` resumes from the saved checkpoint without re-running earlier nodes |
+| `updateState(config, Map, nodeId)` | `/adjust` injects `adjustedBudget` into the checkpoint before resuming |
+| `getState(config)` | `/status` reads the current checkpoint without advancing the graph |
+
+### UI demo
+
+Switch to the **LangGraph Human-in-the-Loop** tab in the browser UI at `http://localhost:8080`. The two-phase flow — budget preview → approve/adjust → final itinerary — is fully interactive.
 
 ---
 
@@ -294,6 +357,8 @@ docker compose --profile app down -v
 
 ## API Endpoints
 
+**Classic multi-agent flow:**
+
 | Method | Endpoint | Description |
 |---|---|---|
 | `GET` | `/api/travel/info` | Service info, supported destinations, feature list |
@@ -301,6 +366,15 @@ docker compose --profile app down -v
 | `POST` | `/api/travel/plan` | Plan a new trip from a natural language query |
 | `POST` | `/api/travel/followup` | Follow-up on an existing plan (requires `conversationId`) |
 | `GET` | `/api/travel/plan/quick?query=...` | Quick plan via query param (for browser/curl testing) |
+
+**LangGraph human-in-the-loop flow:**
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/graph/trips/start` | Start the graph — runs to budget estimate, then pauses. Returns `threadId` + budget summary. |
+| `POST` | `/api/graph/trips/{threadId}/approve` | Resume graph with original budget — builds and returns itinerary. |
+| `POST` | `/api/graph/trips/{threadId}/adjust` | Inject adjusted budget (`{"newBudgetUSD": 3500}`), resume — recalculates and builds itinerary. |
+| `GET` | `/api/graph/trips/{threadId}/status` | Inspect current graph state (next node, what has been computed) without advancing. |
 
 ### POST /api/travel/plan
 
@@ -363,7 +437,15 @@ src/main/java/com/example/travelplanner/
 ├── init/
 │   └── KnowledgeBaseInitializer.java # Ingests destinations into PgVectorStore on startup
 ├── controller/
-│   └── TravelController.java        # REST endpoints
+│   └── TravelController.java        # REST endpoints (classic flow)
+├── graph/                           # LangGraph4j human-in-the-loop flow (new — no existing files modified)
+│   ├── TravelPlanningState.java     # AgentState subclass — typed accessors over the shared state map
+│   ├── TravelPlanningGraph.java     # @Configuration — StateGraph with 4 nodes + MemorySaver checkpointer
+│   ├── GraphTravelController.java   # REST endpoints: /start, /approve, /adjust, /status
+│   └── model/
+│       ├── TripStartResponse.java   # Returned by /start — threadId + budget summary
+│       ├── BudgetAdjustRequest.java # Request body for /adjust
+│       └── GraphTripPlanResponse.java # Final response after approve/adjust
 └── model/                           # Java records: TravelPlan, DayPlan, BudgetBreakdown, AgentTrace, …
 
 currency-mcp-server/                 ← companion MCP server (Spring Boot, port 8090)

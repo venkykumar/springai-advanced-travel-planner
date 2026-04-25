@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Travel Itinerary Planner — Spring AI Multi-Agent Demo</title>
+<title>Travel Itinerary Planner — Spring AI + LangGraph4j Demo</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f4f8; color: #2d3748; }
@@ -16,29 +16,35 @@
   .card h2 { font-size: 1.1rem; font-weight: 600; color: #4a5568; margin-bottom: 16px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
   textarea { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; resize: vertical; font-family: inherit; min-height: 80px; }
   textarea:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.15); }
-  input[type=text] { width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem; font-family: inherit; }
-  input[type=text]:focus { outline: none; border-color: #667eea; }
+  input[type=text], input[type=number] { width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem; font-family: inherit; }
+  input[type=text]:focus, input[type=number]:focus { outline: none; border-color: #667eea; }
   .btn { padding: 11px 24px; border: none; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.15s; }
   .btn-primary { background: #667eea; color: white; }
   .btn-primary:hover { background: #5a6fd6; }
   .btn-secondary { background: #e2e8f0; color: #4a5568; margin-left: 8px; }
   .btn-secondary:hover { background: #cbd5e0; }
+  .btn-teal { background: #0d9488; color: white; }
+  .btn-teal:hover { background: #0f766e; }
+  .btn-amber { background: #d97706; color: white; }
+  .btn-amber:hover { background: #b45309; }
+  .btn-green { background: #16a34a; color: white; }
+  .btn-green:hover { background: #15803d; }
   .btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .examples { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
   .example-chip { background: #ebf4ff; color: #2b6cb0; border: 1px solid #bee3f8; border-radius: 20px; padding: 5px 14px; font-size: 0.82rem; cursor: pointer; }
   .example-chip:hover { background: #bee3f8; }
+  .example-chip.teal { background: #e6fffa; color: #0d9488; border-color: #81e6d9; }
+  .example-chip.teal:hover { background: #b2f5ea; }
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
   label { display: block; font-size: 0.82rem; font-weight: 600; color: #718096; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
   .spinner { display: none; text-align: center; padding: 40px; }
   .spinner.active { display: block; }
   .spinner-ring { width: 48px; height: 48px; border: 4px solid #e2e8f0; border-top-color: #667eea; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .status-bar { background: #ebf8ff; border: 1px solid #bee3f8; border-radius: 8px; padding: 12px 16px; font-size: 0.88rem; color: #2b6cb0; margin-bottom: 12px; display: none; }
-  .status-bar.active { display: block; }
-  /* Result sections */
   .result { display: none; }
   .result.active { display: block; }
   .plan-header { background: linear-gradient(135deg, #48bb78, #38a169); color: white; border-radius: 10px; padding: 20px 24px; margin-bottom: 20px; }
+  .plan-header.teal { background: linear-gradient(135deg, #0d9488, #065f46); }
   .plan-header h2 { font-size: 1.5rem; font-weight: 700; }
   .plan-meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 10px; font-size: 0.88rem; opacity: 0.9; }
   .meta-pill { background: rgba(255,255,255,0.2); padding: 3px 10px; border-radius: 12px; }
@@ -52,7 +58,6 @@
   .tier-LUXURY { background: #fed7e2; color: #97266d; }
   .within-budget-yes { color: #276749; font-weight: 700; }
   .within-budget-no { color: #c53030; font-weight: 700; }
-  /* Days */
   .day-tab-bar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
   .day-tab { padding: 6px 14px; border-radius: 20px; background: #e2e8f0; border: none; cursor: pointer; font-size: 0.85rem; font-weight: 600; }
   .day-tab.active { background: #667eea; color: white; }
@@ -69,7 +74,6 @@
   .food-item .food-label { font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: #718096; }
   .food-item .food-value { font-size: 0.9rem; margin-top: 2px; }
   .day-footer { display: flex; justify-content: space-between; margin-top: 12px; font-size: 0.85rem; color: #718096; background: #f7fafc; padding: 10px 14px; border-radius: 8px; }
-  /* Trace */
   .trace-toggle { background: none; border: none; cursor: pointer; color: #667eea; font-size: 0.88rem; font-weight: 600; padding: 0; }
   .trace-content { display: none; margin-top: 12px; }
   .trace-content.open { display: block; }
@@ -90,95 +94,148 @@
   .tips-list li::before { content: "✓ "; color: #48bb78; font-weight: 700; }
   .error { background: #fff5f5; border: 1px solid #feb2b2; color: #c53030; border-radius: 8px; padding: 14px; margin-bottom: 16px; display: none; }
   .error.active { display: block; }
-  .conv-id-display { font-family: monospace; font-size: 0.82rem; color: #718096; background: #f7fafc; padding: 4px 10px; border-radius: 6px; }
+  .conv-id-display, .thread-id-display { font-family: monospace; font-size: 0.82rem; color: #718096; background: #f7fafc; padding: 4px 10px; border-radius: 6px; }
+
+  /* ── Mode tabs ── */
+  .mode-tabs { display: flex; background: white; border-radius: 12px; padding: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; gap: 6px; }
+  .mode-tab { flex: 1; padding: 11px 16px; border: none; background: none; cursor: pointer; border-radius: 8px; font-weight: 600; font-size: 0.9rem; color: #718096; transition: all 0.15s; text-align: center; }
+  .mode-tab.active.classic  { background: #667eea; color: white; }
+  .mode-tab.active.langgraph { background: #0d9488; color: white; }
+  .mode-tab:hover:not(.active) { background: #f0f4f8; }
+
+  /* ── LangGraph step indicator ── */
+  .step-banner { display: flex; align-items: center; gap: 10px; background: #e6fffa; border: 1px solid #81e6d9; border-radius: 8px; padding: 10px 16px; margin-bottom: 16px; font-size: 0.88rem; color: #0d9488; }
+  .step-dot { width: 24px; height: 24px; border-radius: 50%; background: #0d9488; color: white; font-size: 0.78rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step-dot.done { background: #38a169; }
+
+  /* ── LangGraph budget preview ── */
+  .preview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 16px 0; }
+  .preview-item { background: #e6fffa; border-radius: 8px; padding: 14px; text-align: center; }
+  .preview-item .amount { font-size: 1.25rem; font-weight: 700; color: #0d9488; }
+  .preview-item .label { font-size: 0.75rem; color: #718096; margin-top: 2px; text-transform: uppercase; }
+
+  /* ── LangGraph action bar ── */
+  .action-bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 18px; }
+  .adjust-row { display: flex; gap: 8px; align-items: center; margin-top: 12px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px 16px; flex-wrap: wrap; }
+  .adjust-row input { width: 160px; padding: 9px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.95rem; }
+  .adjust-row label { margin: 0; text-transform: none; font-weight: 600; color: #92400e; white-space: nowrap; }
+
+  /* ── info callout ── */
+  .callout { background: #e6fffa; border-left: 4px solid #0d9488; border-radius: 0 8px 8px 0; padding: 12px 16px; margin-bottom: 16px; font-size: 0.88rem; color: #134e4a; }
+  .callout strong { color: #0d9488; }
 </style>
 </head>
 <body>
 
 <div class="header">
-  <h1>✈️ Travel Itinerary Planner <span class="badge">Spring AI Multi-Agent</span></h1>
-  <p>5 specialist AI agents • Parallel execution • JDBC memory • PgVector RAG • Budget ReAct loop • MCP live currency rates</p>
+  <h1>✈️ Travel Itinerary Planner <span class="badge">Spring AI</span> <span class="badge">LangGraph4j</span></h1>
+  <p>5 specialist AI agents • Parallel execution • JDBC memory • PgVector RAG • Budget ReAct loop • MCP currency rates • Human-in-the-loop graph</p>
 </div>
 
 <div class="container">
 
-  <!-- Input card -->
-  <div class="card">
-    <h2>Plan Your Trip</h2>
-    <div style="margin-bottom:12px">
-      <label>Your Query</label>
-      <textarea id="query" placeholder="e.g. Plan a 7-day trip to Japan in April for a family of 4 with a $5000 budget"></textarea>
-    </div>
-    <div class="examples">
-      <span class="example-chip" onclick="setQuery(this)">Japan 7 days April family of 4 $5000</span>
-      <span class="example-chip" onclick="setQuery(this)">Paris 5 days June 2 people $4000</span>
-      <span class="example-chip" onclick="setQuery(this)">Thailand 10 days January solo $3000</span>
-      <span class="example-chip" onclick="setQuery(this)">Barcelona 6 days July couple $6000</span>
-      <span class="example-chip" onclick="setQuery(this)">Italy Rome Florence 8 days April family of 3 $7000</span>
-    </div>
-    <div class="row" style="margin-top:16px">
-      <div>
-        <label>Conversation ID <span style="font-weight:400;text-transform:none">(leave blank for new trip)</span></label>
-        <input type="text" id="convId" placeholder="Auto-generated for new trips">
-      </div>
-      <div style="display:flex;align-items:flex-end;gap:8px">
-        <button class="btn btn-primary" onclick="planTrip()" id="planBtn">Plan Trip</button>
-        <button class="btn btn-secondary" onclick="clearAll()">Clear</button>
-      </div>
-    </div>
+  <!-- ── Mode tabs ── -->
+  <div class="mode-tabs">
+    <button class="mode-tab active classic" id="tab-classic" onclick="setMode('classic')">Classic Multi-Agent Flow</button>
+    <button class="mode-tab langgraph" id="tab-langgraph" onclick="setMode('langgraph')">LangGraph Human-in-the-Loop</button>
+  </div>
 
-    <!-- Follow-up section -->
-    <div style="margin-top:16px; border-top:1px solid #e2e8f0; padding-top:16px;">
-      <label>Follow-up Request <span style="font-weight:400;text-transform:none">(requires a Conversation ID above)</span></label>
-      <div style="display:flex;gap:8px;margin-top:4px">
-        <input type="text" id="followupQuery" placeholder='e.g. "Make day 3 a food tour" or "Make it more budget-friendly"' style="flex:1">
-        <button class="btn btn-secondary" onclick="followUp()" id="followupBtn">Follow Up</button>
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- CLASSIC SECTION                                                       -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div id="classicSection">
+    <div class="card">
+      <h2>Plan Your Trip</h2>
+      <div style="margin-bottom:12px">
+        <label>Your Query</label>
+        <textarea id="query" placeholder="e.g. Plan a 7-day trip to Japan in April for a family of 4 with a $5000 budget"></textarea>
       </div>
-      <div class="examples" style="margin-top:8px">
-        <span class="example-chip" onclick="setFollowup(this)">Make day 3 a food tour</span>
-        <span class="example-chip" onclick="setFollowup(this)">Make it more budget-friendly</span>
-        <span class="example-chip" onclick="setFollowup(this)">Add a beach day somewhere</span>
-        <span class="example-chip" onclick="setFollowup(this)">What should we pack?</span>
+      <div class="examples">
+        <span class="example-chip" onclick="setQuery(this)">Japan 7 days April family of 4 $5000</span>
+        <span class="example-chip" onclick="setQuery(this)">Paris 5 days June 2 people $4000</span>
+        <span class="example-chip" onclick="setQuery(this)">Thailand 10 days January solo $3000</span>
+        <span class="example-chip" onclick="setQuery(this)">Barcelona 6 days July couple $6000</span>
+        <span class="example-chip" onclick="setQuery(this)">Italy Rome Florence 8 days April family of 3 $7000</span>
+      </div>
+      <div class="row" style="margin-top:16px">
+        <div>
+          <label>Conversation ID <span style="font-weight:400;text-transform:none">(leave blank for new trip)</span></label>
+          <input type="text" id="convId" placeholder="Auto-generated for new trips">
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:8px">
+          <button class="btn btn-primary" onclick="planTrip()" id="planBtn">Plan Trip</button>
+          <button class="btn btn-secondary" onclick="clearAll()">Clear</button>
+        </div>
+      </div>
+      <div style="margin-top:16px; border-top:1px solid #e2e8f0; padding-top:16px;">
+        <label>Follow-up Request <span style="font-weight:400;text-transform:none">(requires a Conversation ID above)</span></label>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <input type="text" id="followupQuery" placeholder='e.g. "Make day 3 a food tour" or "Make it more budget-friendly"' style="flex:1">
+          <button class="btn btn-secondary" onclick="followUp()" id="followupBtn">Follow Up</button>
+        </div>
+        <div class="examples" style="margin-top:8px">
+          <span class="example-chip" onclick="setFollowup(this)">Make day 3 a food tour</span>
+          <span class="example-chip" onclick="setFollowup(this)">Make it more budget-friendly</span>
+          <span class="example-chip" onclick="setFollowup(this)">Add a beach day somewhere</span>
+          <span class="example-chip" onclick="setFollowup(this)">What should we pack?</span>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Error -->
-  <div class="error" id="errorBox"></div>
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- LANGGRAPH SECTION                                                     -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div id="langGraphSection" style="display:none">
+    <div class="card" style="border-top:3px solid #0d9488">
+      <h2 style="color:#0d9488">Plan Your Trip — LangGraph Flow</h2>
+      <div class="callout">
+        <strong>How this works:</strong> The graph runs two phases. Phase 1 estimates your budget and pauses — you see the estimate and decide whether to approve or adjust. Phase 2 builds the full itinerary only after you confirm. This demonstrates LangGraph4j's <strong>human-in-the-loop interrupt &amp; resume</strong> capability.
+      </div>
+      <div style="margin-bottom:12px">
+        <label>Your Query</label>
+        <textarea id="lgQuery" placeholder="e.g. Plan a 7-day trip to Japan in April for a family of 4 with a $5000 budget"></textarea>
+      </div>
+      <div class="examples">
+        <span class="example-chip teal" onclick="lgSetQuery(this)">Japan 7 days April family of 4 $5000</span>
+        <span class="example-chip teal" onclick="lgSetQuery(this)">Paris 5 days June 2 people $4000</span>
+        <span class="example-chip teal" onclick="lgSetQuery(this)">Thailand 10 days January solo $3000</span>
+        <span class="example-chip teal" onclick="lgSetQuery(this)">Barcelona 6 days July couple $6000</span>
+        <span class="example-chip teal" onclick="lgSetQuery(this)">Italy Rome Florence 8 days April family of 3 $7000</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:16px">
+        <button class="btn btn-teal" onclick="lgStart()" id="lgStartBtn">Start Planning</button>
+        <button class="btn btn-secondary" onclick="lgClear()">Clear</button>
+      </div>
+    </div>
+  </div>
 
-  <!-- Spinner -->
+  <!-- ── Shared: error + spinner ── -->
+  <div class="error" id="errorBox"></div>
   <div class="spinner" id="spinner">
     <div class="spinner-ring"></div>
-    <div id="spinnerMsg" style="color:#718096">Dispatching agents in parallel...</div>
+    <div id="spinnerMsg" style="color:#718096">Working...</div>
   </div>
 
-  <!-- Result -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- CLASSIC RESULT                                                        -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
   <div class="result" id="result">
-
-    <!-- Plan header -->
     <div class="plan-header" id="planHeader"></div>
-
-    <!-- Budget breakdown -->
     <div class="card" id="budgetCard">
       <h2>Budget Breakdown</h2>
       <div class="budget-card" id="budgetGrid"></div>
       <div id="tradeOffNotes" style="margin-top:12px;font-size:0.88rem;color:#4a5568;background:#f7fafc;padding:10px 14px;border-radius:8px;"></div>
     </div>
-
-    <!-- Itinerary -->
     <div class="card">
       <h2>Day-by-Day Itinerary</h2>
       <div class="day-tab-bar" id="dayTabs"></div>
       <div id="dayPlans"></div>
     </div>
-
-    <!-- Cultural tips -->
     <div class="card" id="tipsCard">
-      <h2>Cultural Tips & Etiquette</h2>
+      <h2>Cultural Tips &amp; Etiquette</h2>
       <ul class="tips-list" id="tipsList"></ul>
     </div>
-
-    <!-- Agent trace -->
     <div class="card">
       <h2>Agent Trace <button class="trace-toggle" onclick="toggleTrace()">▶ Show execution steps</button></h2>
       <div id="traceContent" class="trace-content">
@@ -189,18 +246,89 @@
         <div id="traceSummary" style="margin-top:12px;font-size:0.85rem;color:#718096;background:#f7fafc;padding:10px;border-radius:8px;"></div>
       </div>
     </div>
-
-    <!-- Conversation ID -->
     <div style="text-align:right;margin-top:8px">
       <span style="font-size:0.82rem;color:#a0aec0">Conversation ID: </span>
       <span class="conv-id-display" id="convIdDisplay"></span>
     </div>
-
   </div>
-</div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- LANGGRAPH RESULT                                                      -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div id="lgResult" style="display:none">
+
+    <!-- Step 1: Budget Preview -->
+    <div id="lgBudgetPreview">
+      <div class="card" style="border-top:3px solid #0d9488">
+        <div class="step-banner">
+          <div class="step-dot">1</div>
+          <div><strong>Graph paused — budget estimated.</strong> Review the estimate below, then approve to build the full itinerary or adjust the budget and recalculate.</div>
+        </div>
+
+        <h2 id="lgDestinationTitle" style="font-size:1.4rem;color:#0d9488;margin-bottom:0;border:none;padding:0"></h2>
+        <div class="preview-grid" id="lgPreviewGrid"></div>
+        <div id="lgTradeOffNotes" style="font-size:0.88rem;color:#4a5568;background:#f0fdfa;padding:10px 14px;border-radius:8px;border-left:3px solid #81e6d9;"></div>
+
+        <div class="action-bar">
+          <button class="btn btn-green" onclick="lgApprove()" id="lgApproveBtn">Approve &amp; Build Itinerary</button>
+          <button class="btn btn-amber" onclick="toggleAdjust()" id="lgAdjustToggleBtn">Adjust Budget</button>
+        </div>
+
+        <div class="adjust-row" id="lgAdjustRow" style="display:none">
+          <label>New total budget (USD):</label>
+          <input type="number" id="lgNewBudget" placeholder="e.g. 3500" min="100" step="100">
+          <button class="btn btn-teal" onclick="lgAdjust()" id="lgAdjustBtn">Recalculate &amp; Build</button>
+        </div>
+
+        <div style="margin-top:14px;font-size:0.82rem;color:#a0aec0">
+          Thread ID: <span class="thread-id-display" id="lgThreadIdPreview"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Full Plan -->
+    <div id="lgFinalPlan" style="display:none">
+      <div class="step-banner" style="background:#dcfce7;border-color:#86efac;color:#166534">
+        <div class="step-dot done">✓</div>
+        <div><strong>Itinerary built.</strong> The LangGraph flow completed — budget was approved and the full day-by-day plan was generated.</div>
+      </div>
+
+      <div class="plan-header teal" id="lgPlanHeader"></div>
+
+      <div class="card" id="lgBudgetCard">
+        <h2>Budget Breakdown</h2>
+        <div class="budget-card" id="lgBudgetGrid"></div>
+        <div id="lgTradeOffNotesResult" style="margin-top:12px;font-size:0.88rem;color:#4a5568;background:#f7fafc;padding:10px 14px;border-radius:8px;"></div>
+      </div>
+
+      <div class="card">
+        <h2>Day-by-Day Itinerary</h2>
+        <div class="day-tab-bar" id="lgDayTabs"></div>
+        <div id="lgDayPlans"></div>
+      </div>
+
+      <div class="card" id="lgLogisticsCard" style="display:none">
+        <h2>Logistics Summary</h2>
+        <div id="lgLogisticsText" style="font-size:0.9rem;line-height:1.7;color:#4a5568;white-space:pre-wrap"></div>
+      </div>
+
+      <div style="text-align:right;margin-top:8px">
+        <span style="font-size:0.82rem;color:#a0aec0">Thread ID: </span>
+        <span class="thread-id-display" id="lgThreadIdFinal"></span>
+      </div>
+    </div>
+
+  </div><!-- /lgResult -->
+
+</div><!-- /container -->
 
 <script>
+// ── State ────────────────────────────────────────────────────────────────────
 let currentConvId = null;
+let lgThreadId = null;
+let spinnerTimer;
+let spinnerIdx = 0;
+
 const spinnerMessages = [
   'Dispatching agents in parallel...',
   'DestinationResearchAgent: researching attractions and seasonal tips...',
@@ -211,8 +339,22 @@ const spinnerMessages = [
   'ItineraryBuilderAgent: building day-by-day schedule...',
   'OrchestratorAgent: synthesising final travel plan...'
 ];
-let spinnerIdx = 0, spinnerTimer;
 
+// ── Mode toggle ───────────────────────────────────────────────────────────────
+function setMode(mode) {
+  const isClassic = mode === 'classic';
+  document.getElementById('classicSection').style.display  = isClassic ? '' : 'none';
+  document.getElementById('langGraphSection').style.display = isClassic ? 'none' : '';
+  document.getElementById('tab-classic').classList.toggle('active', isClassic);
+  document.getElementById('tab-langgraph').classList.toggle('active', !isClassic);
+  if (isClassic) {
+    document.getElementById('lgResult').style.display = 'none';
+  } else {
+    document.getElementById('result').classList.remove('active');
+  }
+}
+
+// ── Classic helpers ───────────────────────────────────────────────────────────
 function setQuery(chip) {
   document.getElementById('query').value = 'Plan a 7-day trip to ' + chip.textContent;
 }
@@ -228,6 +370,7 @@ function clearAll() {
   currentConvId = null;
 }
 
+// ── Classic API calls ─────────────────────────────────────────────────────────
 async function planTrip() {
   const query = document.getElementById('query').value.trim();
   if (!query) return alert('Please enter a travel query.');
@@ -235,7 +378,6 @@ async function planTrip() {
   currentConvId = convId;
   await callApi('/api/travel/plan', { userQuery: query, conversationId: convId });
 }
-
 async function followUp() {
   const fq = document.getElementById('followupQuery').value.trim();
   if (!fq) return alert('Please enter a follow-up question.');
@@ -244,151 +386,150 @@ async function followUp() {
   currentConvId = convId;
   await callApi('/api/travel/followup', { userQuery: fq, conversationId: convId });
 }
-
 async function callApi(url, body) {
   showSpinner();
   hideError();
   document.getElementById('result').classList.remove('active');
   try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(err || `HTTP ${res.status}`);
-    }
-    const data = await res.json();
-    renderResult(data);
-  } catch (e) {
-    showError(e.message);
-  } finally {
-    hideSpinner();
-  }
+    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`);
+    renderResult(await res.json());
+  } catch (e) { showError(e.message); }
+  finally { hideSpinner(); }
 }
 
-function showSpinner() {
+// ── Spinner ───────────────────────────────────────────────────────────────────
+function showSpinner(staticMsg) {
   document.getElementById('spinner').classList.add('active');
-  document.getElementById('planBtn').disabled = true;
+  document.getElementById('planBtn').disabled    = true;
   document.getElementById('followupBtn').disabled = true;
-  spinnerIdx = 0;
-  spinnerTimer = setInterval(() => {
-    spinnerIdx = (spinnerIdx + 1) % spinnerMessages.length;
-    document.getElementById('spinnerMsg').textContent = spinnerMessages[spinnerIdx];
-  }, 2200);
+  document.getElementById('lgStartBtn').disabled  = true;
+  clearInterval(spinnerTimer);
+  if (staticMsg) {
+    document.getElementById('spinnerMsg').textContent = staticMsg;
+  } else {
+    spinnerIdx = 0;
+    document.getElementById('spinnerMsg').textContent = spinnerMessages[0];
+    spinnerTimer = setInterval(() => {
+      spinnerIdx = (spinnerIdx + 1) % spinnerMessages.length;
+      document.getElementById('spinnerMsg').textContent = spinnerMessages[spinnerIdx];
+    }, 2200);
+  }
 }
 function hideSpinner() {
   clearInterval(spinnerTimer);
   document.getElementById('spinner').classList.remove('active');
-  document.getElementById('planBtn').disabled = false;
+  document.getElementById('planBtn').disabled    = false;
   document.getElementById('followupBtn').disabled = false;
+  document.getElementById('lgStartBtn').disabled  = false;
 }
 function showError(msg) {
   const el = document.getElementById('errorBox');
   el.textContent = '⚠ ' + msg;
   el.classList.add('active');
 }
-function hideError() {
-  document.getElementById('errorBox').classList.remove('active');
+function hideError() { document.getElementById('errorBox').classList.remove('active'); }
+
+// ── Shared: render a day-plan section ────────────────────────────────────────
+// tabsEl and plansEl are DOM elements; prefix makes day IDs unique per section.
+function renderDayPlans(days, tabsEl, plansEl, prefix) {
+  tabsEl.innerHTML = '';
+  plansEl.innerHTML = '';
+  if (!days || !days.length) return;
+  days.forEach((day, i) => {
+    const dayId = prefix + '-day-' + i;
+    const tab = document.createElement('button');
+    tab.className = 'day-tab' + (i === 0 ? ' active' : '');
+    tab.textContent = 'Day ' + day.dayNumber;
+    tab.onclick = () => {
+      tabsEl.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
+      plansEl.querySelectorAll('.day-plan').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(dayId).classList.add('active');
+    };
+    tabsEl.appendChild(tab);
+
+    const dp = document.createElement('div');
+    dp.className = 'day-plan' + (i === 0 ? ' active' : '');
+    dp.id = dayId;
+    dp.innerHTML = `
+      <div class="day-header">Day ${day.dayNumber}: ${day.theme || ''}</div>
+      <div class="time-block morning">
+        <div class="time-label">☀ Morning</div>
+        ${(day.morningActivities || []).map(a => '<div class="activity">• ' + a + '</div>').join('')}
+      </div>
+      <div class="time-block afternoon">
+        <div class="time-label">🌤 Afternoon</div>
+        ${(day.afternoonActivities || []).map(a => '<div class="activity">• ' + a + '</div>').join('')}
+      </div>
+      <div class="time-block evening">
+        <div class="time-label">🌙 Evening</div>
+        ${(day.eveningActivities || []).map(a => '<div class="activity">• ' + a + '</div>').join('')}
+      </div>
+      <div class="food-row">
+        <div class="food-item"><div class="food-label">🍽 Lunch</div><div class="food-value">${day.lunchRecommendation || '—'}</div></div>
+        <div class="food-item"><div class="food-label">🍷 Dinner</div><div class="food-value">${day.dinnerRecommendation || '—'}</div></div>
+      </div>
+      <div class="day-footer">
+        <span>🏨 ${day.accommodation || '—'}</span>
+        <span>💸 ~$${fmt(day.estimatedDailySpendPerPerson)}/person</span>
+      </div>
+      ${day.notes ? '<div style="margin-top:10px;font-size:0.85rem;color:#718096;font-style:italic">📌 ' + day.notes + '</div>' : ''}`;
+    plansEl.appendChild(dp);
+  });
 }
 
+// ── Shared: budget grid HTML ──────────────────────────────────────────────────
+function budgetGridHtml(bd) {
+  if (!bd) return '';
+  const tier = bd.tier || 'MID';
+  const withinClass = bd.isWithinBudget ? 'within-budget-yes' : 'within-budget-no';
+  const withinText  = bd.isWithinBudget ? '✓ Within Budget' : '✗ Over Budget';
+  const localHtml   = (bd.localCurrency && bd.localCurrency !== 'USD' && bd.localCurrencyTotal > 0)
+    ? `<div class="budget-item"><div class="amount">${fmtLocal(bd.localCurrency, bd.localCurrencyTotal)}</div><div class="label">${bd.localCurrency} equiv <span style="font-size:0.7rem;color:#a0aec0">(1 USD = ${(bd.exchangeRate||0).toFixed(2)} ${bd.localCurrency})</span></div></div>` : '';
+  return `
+    <div class="budget-item"><div class="amount">$${fmt(bd.flightsCostTotal)}</div><div class="label">Flights (total)</div></div>
+    <div class="budget-item"><div class="amount">$${fmt(bd.accommodationPerNight)}/night</div><div class="label">Accommodation</div></div>
+    <div class="budget-item"><div class="amount">$${fmt(bd.mealsTotal)}</div><div class="label">Meals (total)</div></div>
+    <div class="budget-item"><div class="amount">$${fmt(bd.activitiesTotal)}</div><div class="label">Activities</div></div>
+    <div class="budget-item"><div class="amount">$${fmt(bd.grandTotal)}</div><div class="label">Grand Total <span class="budget-tier tier-${tier}">${tier}</span></div></div>
+    <div class="budget-item"><div class="amount ${withinClass}">${withinText}</div><div class="label">$${fmt(Math.abs(bd.budgetRemaining))} ${bd.budgetRemaining >= 0 ? 'remaining' : 'over'}</div></div>
+    ${localHtml}`;
+}
+
+// ── Classic result renderer ───────────────────────────────────────────────────
 function renderResult(response) {
   const plan = response.travelPlan;
-  const req = plan.travelRequest;
+  const req  = plan.travelRequest;
 
-  // Conversation ID
   document.getElementById('convId').value = response.conversationId;
   document.getElementById('convIdDisplay').textContent = response.conversationId;
 
-  // Plan header
   if (req) {
-    const header = document.getElementById('planHeader');
-    header.innerHTML = `
+    document.getElementById('planHeader').innerHTML = `
       <h2>${plan.destination}</h2>
       <div class="plan-meta">
         <span class="meta-pill">📅 ${req.durationDays} days</span>
         <span class="meta-pill">👥 ${req.travelers} travelers</span>
         <span class="meta-pill">📆 ${req.travelMonth}</span>
-        <span class="meta-pill">💰 Budget $${req.budgetUSD?.toLocaleString()}</span>
+        <span class="meta-pill">💰 Budget $${(req.budgetUSD||0).toLocaleString()}</span>
         ${req.preferences?.length ? '<span class="meta-pill">✨ ' + req.preferences.join(', ') + '</span>' : ''}
       </div>`;
   } else {
     document.getElementById('planHeader').innerHTML = `<h2>${plan.destination || 'Follow-up Response'}</h2>`;
   }
 
-  // Budget
   const bd = plan.budgetBreakdown;
   if (bd) {
-    const tier = bd.tier || 'MID';
-    const withinClass = bd.isWithinBudget ? 'within-budget-yes' : 'within-budget-no';
-    const withinText = bd.isWithinBudget ? '✓ Within Budget' : '✗ Over Budget';
-    const localCurrencyHtml = (bd.localCurrency && bd.localCurrency !== 'USD' && bd.localCurrencyTotal > 0)
-      ? `<div class="budget-item"><div class="amount">${fmtLocal(bd.localCurrency, bd.localCurrencyTotal)}</div><div class="label">${bd.localCurrency} equiv <span style="font-size:0.7rem;color:#a0aec0">(1 USD = ${bd.exchangeRate?.toFixed(2)} ${bd.localCurrency})</span></div></div>`
-      : '';
-    document.getElementById('budgetGrid').innerHTML = `
-      <div class="budget-item"><div class="amount">$${fmt(bd.flightsCostTotal)}</div><div class="label">Flights (total)</div></div>
-      <div class="budget-item"><div class="amount">$${fmt(bd.accommodationPerNight)}/night</div><div class="label">Accommodation</div></div>
-      <div class="budget-item"><div class="amount">$${fmt(bd.mealsTotal)}</div><div class="label">Meals (total)</div></div>
-      <div class="budget-item"><div class="amount">$${fmt(bd.activitiesTotal)}</div><div class="label">Activities</div></div>
-      <div class="budget-item"><div class="amount">$${fmt(bd.grandTotal)}</div><div class="label">Grand Total <span class="budget-tier tier-${tier}">${tier}</span></div></div>
-      <div class="budget-item"><div class="amount ${withinClass}">${withinText}</div><div class="label">$${fmt(Math.abs(bd.budgetRemaining))} ${bd.budgetRemaining >= 0 ? 'remaining' : 'over'}</div></div>
-      ${localCurrencyHtml}`;
+    document.getElementById('budgetGrid').innerHTML = budgetGridHtml(bd);
     document.getElementById('tradeOffNotes').textContent = bd.tradeOffNotes || '';
     document.getElementById('budgetCard').style.display = '';
   } else {
     document.getElementById('budgetCard').style.display = 'none';
   }
 
-  // Day plans
-  const tabs = document.getElementById('dayTabs');
-  const plans = document.getElementById('dayPlans');
-  tabs.innerHTML = ''; plans.innerHTML = '';
-  const days = plan.dayPlans || [];
-  if (days.length) {
-    days.forEach((day, i) => {
-      const tab = document.createElement('button');
-      tab.className = 'day-tab' + (i === 0 ? ' active' : '');
-      tab.textContent = 'Day ' + day.dayNumber;
-      tab.onclick = () => {
-        document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.day-plan').forEach(p => p.classList.remove('active'));
-        tab.classList.add('active');
-        document.getElementById('day-' + i).classList.add('active');
-      };
-      tabs.appendChild(tab);
+  renderDayPlans(plan.dayPlans || [], document.getElementById('dayTabs'), document.getElementById('dayPlans'), 'classic');
 
-      const dp = document.createElement('div');
-      dp.className = 'day-plan' + (i === 0 ? ' active' : '');
-      dp.id = 'day-' + i;
-      dp.innerHTML = `
-        <div class="day-header">Day ${day.dayNumber}: ${day.theme || ''}</div>
-        <div class="time-block morning">
-          <div class="time-label">☀ Morning</div>
-          ${(day.morningActivities || []).map(a => '<div class="activity">• ' + a + '</div>').join('')}
-        </div>
-        <div class="time-block afternoon">
-          <div class="time-label">🌤 Afternoon</div>
-          ${(day.afternoonActivities || []).map(a => '<div class="activity">• ' + a + '</div>').join('')}
-        </div>
-        <div class="time-block evening">
-          <div class="time-label">🌙 Evening</div>
-          ${(day.eveningActivities || []).map(a => '<div class="activity">• ' + a + '</div>').join('')}
-        </div>
-        <div class="food-row">
-          <div class="food-item"><div class="food-label">🍽 Lunch</div><div class="food-value">${day.lunchRecommendation || '—'}</div></div>
-          <div class="food-item"><div class="food-label">🍷 Dinner</div><div class="food-value">${day.dinnerRecommendation || '—'}</div></div>
-        </div>
-        <div class="day-footer">
-          <span>🏨 ${day.accommodation || '—'}</span>
-          <span>💸 ~$${fmt(day.estimatedDailySpendPerPerson)}/person</span>
-        </div>
-        ${day.notes ? '<div style="margin-top:10px;font-size:0.85rem;color:#718096;font-style:italic">📌 ' + day.notes + '</div>' : ''}`;
-      plans.appendChild(dp);
-    });
-  }
-
-  // Cultural tips
   const tips = plan.culturalTips || [];
   if (tips.length) {
     document.getElementById('tipsList').innerHTML = tips.map(t => '<li>' + t + '</li>').join('');
@@ -397,21 +538,17 @@ function renderResult(response) {
     document.getElementById('tipsCard').style.display = 'none';
   }
 
-  // Trace
   const traceSteps = plan.agentTrace?.steps || [];
   document.getElementById('traceSteps').innerHTML = traceSteps.map(s => {
     const isMcp = s.agentName === 'CurrencyMcpAdapter';
-    const cls = isMcp ? 'mcp' : s.action?.includes('retry') ? 'retry' : s.parallel ? 'parallel' : 'sequential';
-    const badge = isMcp
-      ? '<span class="mcp-badge">⇄ MCP</span>'
-      : s.parallel ? '<span class="parallel-badge">∥ parallel</span>' : '';
-    const dur = s.durationMs > 0 ? s.durationMs + 'ms' : '—';
+    const cls   = isMcp ? 'mcp' : s.action?.includes('retry') ? 'retry' : s.parallel ? 'parallel' : 'sequential';
+    const badge = isMcp ? '<span class="mcp-badge">⇄ MCP</span>' : s.parallel ? '<span class="parallel-badge">∥ parallel</span>' : '';
     return `<div class="trace-step ${cls}">
       <span class="trace-agent">${s.agentName} ${badge}</span>
       <span class="trace-action">${s.action}</span>
       <span class="trace-input">${s.inputSummary || ''}</span>
       <span class="trace-output">${s.outputSummary || ''}</span>
-      <span class="trace-dur">${dur}</span>
+      <span class="trace-dur">${s.durationMs > 0 ? s.durationMs + 'ms' : '—'}</span>
     </div>`;
   }).join('');
 
@@ -425,21 +562,158 @@ function renderResult(response) {
 }
 
 function toggleTrace() {
-  const c = document.getElementById('traceContent');
+  const c   = document.getElementById('traceContent');
   const btn = document.querySelector('.trace-toggle');
   const open = c.classList.toggle('open');
   btn.textContent = (open ? '▼ Hide' : '▶ Show') + ' execution steps';
 }
 
+// ── LangGraph helpers ─────────────────────────────────────────────────────────
+function lgSetQuery(chip) {
+  document.getElementById('lgQuery').value = 'Plan a 7-day trip to ' + chip.textContent;
+}
+function lgClear() {
+  document.getElementById('lgQuery').value = '';
+  document.getElementById('lgResult').style.display = 'none';
+  document.getElementById('lgAdjustRow').style.display = 'none';
+  lgThreadId = null;
+  hideError();
+}
+
+// ── LangGraph: Step 1 — Start ─────────────────────────────────────────────────
+async function lgStart() {
+  const query = document.getElementById('lgQuery').value.trim();
+  if (!query) return alert('Please enter a travel query.');
+  showSpinner('Running agents: parsing query, researching destination, estimating budget...');
+  hideError();
+  document.getElementById('lgResult').style.display = 'none';
+  try {
+    const res = await fetch('/api/graph/trips/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userQuery: query })
+    });
+    if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`);
+    const data = await res.json();
+    lgThreadId = data.threadId;
+    renderLgBudgetPreview(data);
+  } catch (e) { showError(e.message); }
+  finally { hideSpinner(); }
+}
+
+function renderLgBudgetPreview(data) {
+  const tier       = data.budgetTier || 'MID';
+  const withinClass = data.isWithinBudget ? 'within-budget-yes' : 'within-budget-no';
+  const localHtml  = (data.localCurrency && data.localCurrency !== 'USD' && data.localCurrencyTotal > 0)
+    ? `<div class="preview-item"><div class="amount">${fmtLocal(data.localCurrency, data.localCurrencyTotal)}</div><div class="label">${data.localCurrency} equiv<br><span style="font-size:0.7rem;color:#a0aec0">1 USD = ${(data.exchangeRate||0).toFixed(2)}</span></div></div>` : '';
+
+  document.getElementById('lgDestinationTitle').textContent = data.destination;
+  document.getElementById('lgPreviewGrid').innerHTML = `
+    <div class="preview-item"><div class="amount">${data.durationDays}</div><div class="label">Days</div></div>
+    <div class="preview-item"><div class="amount">${data.travelers}</div><div class="label">Travelers</div></div>
+    <div class="preview-item"><div class="amount">$${fmt(data.budgetEstimateUSD)}</div><div class="label">Estimated Total <span class="budget-tier tier-${tier}">${tier}</span></div></div>
+    <div class="preview-item"><div class="amount ${withinClass}">${data.isWithinBudget ? '✓ Fits' : '✗ Over'}</div><div class="label">Budget fit</div></div>
+    ${localHtml}`;
+  document.getElementById('lgTradeOffNotes').textContent = data.tradeOffNotes || '';
+  document.getElementById('lgThreadIdPreview').textContent = data.threadId;
+  document.getElementById('lgAdjustRow').style.display = 'none';
+  document.getElementById('lgBudgetPreview').style.display = '';
+  document.getElementById('lgFinalPlan').style.display = 'none';
+  document.getElementById('lgResult').style.display = '';
+}
+
+function toggleAdjust() {
+  const row = document.getElementById('lgAdjustRow');
+  row.style.display = row.style.display === 'none' ? '' : 'none';
+}
+
+// ── LangGraph: Step 2a — Approve ─────────────────────────────────────────────
+async function lgApprove() {
+  if (!lgThreadId) return;
+  document.getElementById('lgApproveBtn').disabled = true;
+  document.getElementById('lgAdjustToggleBtn').disabled = true;
+  showSpinner('Graph resumed — building full day-by-day itinerary...');
+  hideError();
+  try {
+    const res = await fetch(`/api/graph/trips/${lgThreadId}/approve`, { method: 'POST' });
+    if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`);
+    renderLgFinalPlan(await res.json());
+  } catch (e) { showError(e.message); }
+  finally {
+    hideSpinner();
+    document.getElementById('lgApproveBtn').disabled = false;
+    document.getElementById('lgAdjustToggleBtn').disabled = false;
+  }
+}
+
+// ── LangGraph: Step 2b — Adjust ──────────────────────────────────────────────
+async function lgAdjust() {
+  if (!lgThreadId) return;
+  const newBudget = parseFloat(document.getElementById('lgNewBudget').value);
+  if (!newBudget || newBudget <= 0) return alert('Please enter a valid budget amount in USD.');
+  document.getElementById('lgAdjustBtn').disabled = true;
+  showSpinner(`Injecting $${newBudget.toLocaleString()} into graph state, recalculating budget, building itinerary...`);
+  hideError();
+  try {
+    const res = await fetch(`/api/graph/trips/${lgThreadId}/adjust`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ newBudgetUSD: newBudget })
+    });
+    if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`);
+    renderLgFinalPlan(await res.json());
+  } catch (e) { showError(e.message); }
+  finally {
+    hideSpinner();
+    document.getElementById('lgAdjustBtn').disabled = false;
+  }
+}
+
+// ── LangGraph: render final plan ──────────────────────────────────────────────
+function renderLgFinalPlan(data) {
+  const req = data.travelRequest;
+  const bd  = data.budget;
+
+  document.getElementById('lgPlanHeader').innerHTML = `
+    <h2>${req ? req.destination : ''}</h2>
+    <div class="plan-meta">
+      ${req ? `<span class="meta-pill">📅 ${req.durationDays} days</span>
+               <span class="meta-pill">👥 ${req.travelers} travelers</span>
+               <span class="meta-pill">📆 ${req.travelMonth}</span>` : ''}
+      ${bd ? `<span class="meta-pill">💰 $${fmt(bd.grandTotal)} total</span>` : ''}
+    </div>`;
+
+  if (bd) {
+    document.getElementById('lgBudgetGrid').innerHTML = budgetGridHtml(bd);
+    document.getElementById('lgTradeOffNotesResult').textContent = bd.tradeOffNotes || '';
+    document.getElementById('lgBudgetCard').style.display = '';
+  } else {
+    document.getElementById('lgBudgetCard').style.display = 'none';
+  }
+
+  renderDayPlans(data.itinerary || [], document.getElementById('lgDayTabs'), document.getElementById('lgDayPlans'), 'lg');
+
+  const logistics = data.logisticsSummary;
+  if (logistics && logistics.trim()) {
+    document.getElementById('lgLogisticsText').textContent = logistics;
+    document.getElementById('lgLogisticsCard').style.display = '';
+  } else {
+    document.getElementById('lgLogisticsCard').style.display = 'none';
+  }
+
+  document.getElementById('lgThreadIdFinal').textContent = data.threadId || '';
+  document.getElementById('lgBudgetPreview').style.display = 'none';
+  document.getElementById('lgFinalPlan').style.display = '';
+}
+
+// ── Formatters ────────────────────────────────────────────────────────────────
 function fmt(n) {
   if (n == null) return '0';
   return Math.round(n).toLocaleString();
 }
-
 function fmtLocal(currency, amount) {
   const symbols = { JPY: '¥', EUR: '€', THB: '฿', GBP: '£', AUD: 'A$', CAD: 'C$' };
-  const symbol = symbols[currency] || currency + ' ';
-  return symbol + Math.round(amount).toLocaleString();
+  return (symbols[currency] || currency + ' ') + Math.round(amount).toLocaleString();
 }
 </script>
 </body>
