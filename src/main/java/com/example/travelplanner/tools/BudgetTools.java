@@ -85,7 +85,8 @@ public class BudgetTools {
 
         return new BudgetBreakdown(tier, flights, accommodationPerNight, accommodationTotal,
                 mealsPerDayPerPerson, mealsTotal, activitiesTotal, localTransportTotal,
-                miscBuffer, grandTotal, budgetRemaining, grandTotal <= totalBudgetUSD, tradeOffNotes);
+                miscBuffer, grandTotal, budgetRemaining, grandTotal <= totalBudgetUSD, tradeOffNotes,
+                "", 0.0, 0.0);
     }
 
     private BudgetTier determineTierAutomatically(String destination, int travelers, int nights,

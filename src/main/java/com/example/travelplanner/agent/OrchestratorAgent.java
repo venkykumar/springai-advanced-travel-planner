@@ -134,6 +134,13 @@ public class OrchestratorAgent {
                     "$" + travelRequest.budgetUSD() + " / " + travelRequest.travelers() + " travelers",
                     "Tier=" + bd.tier() + " Total=$" + String.format("%.0f", bd.grandTotal()) + " withinBudget=" + bd.isWithinBudget(),
                     System.currentTimeMillis() - t, true);
+            if (bd.exchangeRate() > 0 && !bd.localCurrency().isBlank() && !bd.localCurrency().equals("USD")) {
+                addTrace(trace, "CurrencyMcpAdapter", "getExchangeRate [MCP]",
+                        "USD → " + bd.localCurrency(),
+                        "1 USD = " + bd.exchangeRate() + " " + bd.localCurrency()
+                                + " | total " + bd.localCurrency() + " " + String.format("%.0f", bd.localCurrencyTotal()),
+                        0L, true);
+            }
             return bd;
         }, executor);
 

@@ -105,7 +105,7 @@ class TravelControllerTest {
         TravelRequest req = new TravelRequest("Japan", 7, 4, 5000.0, "April", List.of());
         BudgetBreakdown bd = new BudgetBreakdown(
                 BudgetTier.MID, 3600, 160, 1120, 60, 1680, 400, 280, 565, 7645, -2645, false,
-                "Over budget — retrying with BUDGET tier");
+                "Over budget — retrying with BUDGET tier", "JPY", 1143725, 149.5);
         AgentTrace trace = new AgentTrace(List.of(), 12000L, 3, 1);
         TravelPlan plan = new TravelPlan("Japan", req, List.of(), bd, null,
                 List.of("Remove shoes at temples"), List.of("Cherry blossom season"), trace);

@@ -84,6 +84,12 @@
             <artifactId>jackson-databind</artifactId>
         </dependency>
 
+        <!-- MCP client — connects to currency-mcp-server for live exchange rates -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-mcp-client</artifactId>
+        </dependency>
+
         <!-- Testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -2,7 +2,7 @@
 
 An advanced Spring AI showcase demonstrating **multi-agent orchestration**, built as a companion to [springai-starter](../springai-starter). Where the starter covers the fundamentals (chat, streaming, RAG, tool calling, MCP), this project goes deeper — multiple specialised AI agents working in parallel, persistent memory across restarts, and a production-grade vector store.
 
-**Tech stack:** Java 25 · Spring Boot 3.5 · Spring AI 1.1.4 · PostgreSQL + pgvector · Docker Compose
+**Tech stack:** Java 25 · Spring Boot 3.5 · Spring AI 1.1.4 · PostgreSQL + pgvector · MCP client/server · Docker Compose
 
 ---
 
@@ -18,6 +18,46 @@ An advanced Spring AI showcase demonstrating **multi-agent orchestration**, buil
 | Budget handling | None | ReAct loop — retries with lower tier if over budget |
 | Observability | None | `AgentTrace` in every response shows every step |
 | Infrastructure | None | Docker Compose (Postgres + pgvector) |
+| External data | None | MCP client/server — live currency exchange rates |
+
+---
+
+## MCP Currency Feature
+
+The `BudgetBreakdown` in every plan response now includes three extra fields:
+
+| Field | Example |
+|---|---|
+| `localCurrency` | `"JPY"` |
+| `localCurrencyTotal` | `748500` |
+| `exchangeRate` | `149.5` |
+
+So the total cost is shown as both `"grandTotal": 5007.0` (USD) **and** `"localCurrencyTotal": 748500` (JPY, at the live rate).
+
+This is implemented as an **MCP client/server pair** that communicates across process boundaries:
+
+- **`currency-mcp-server/`** — a standalone Spring Boot app running on port 8090. It exposes one MCP tool (`getExchangeRate`) that calls `api.exchangerate-api.com/v4/latest/USD` and returns the live USD→target rate. No API key required.
+- **Travel planner** — an MCP client. After calculating the USD budget breakdown, `BudgetAgent` calls the MCP server via `CurrencyMcpAdapter` to get the live rate, then enriches the `BudgetBreakdown`.
+
+If the currency server is not running, the adapter falls back to static rates (JPY≈149.5, EUR≈0.92, THB≈35.8) so the travel planner always works.
+
+### Running the Currency MCP Server
+
+```bash
+# Terminal 1 — start the currency MCP server
+cd currency-mcp-server
+mvn spring-boot:run
+# Listens on http://localhost:8090, MCP SSE endpoint at /sse
+
+# Terminal 2 — enable live rates in the travel planner
+# Uncomment in src/main/resources/application.properties:
+# spring.ai.mcp.client.sse.connections.currency-server.url=http://localhost:8090
+
+# Then start the travel planner as usual
+mvn spring-boot:run
+```
+
+The MCP server exposes one tool named `getExchangeRate`. You can inspect it at `GET http://localhost:8090/sse`.
 
 ---
 
@@ -30,6 +70,8 @@ sequenceDiagram
     participant D as Destination
     participant L as Logistics
     participant B as Budget
+    participant C as CurrencyMcpAdapter
+    participant MCP as currency-mcp-server
     participant I as Itinerary
     participant DB as PostgreSQL
 
@@ -43,7 +85,11 @@ sequenceDiagram
         L-->>O: flights, transport, visa
     and
         O->>B: calculateBudget(...)
-        B-->>O: tier, total, withinBudget
+        B->>C: enrich(breakdown, destination)
+        C->>MCP: getExchangeRate(JPY) [MCP tool call]
+        MCP-->>C: 149.5
+        C-->>B: breakdown + localCurrencyTotal
+        B-->>O: tier, total, withinBudget, JPY equivalent
     end
 
     loop retry if over budget
@@ -102,7 +148,7 @@ A travel researcher. Has its own `ChatClient` and four `@Tool`-annotated methods
 A logistics specialist. Uses tools to look up round-trip flight estimates (with seasonal multipliers), local transport options (JR Pass, metro, IC cards), and visa requirements for US passport holders.
 
 ### BudgetAgent
-A budget analyst. Pure logic — no LLM call. Calculates a full cost breakdown across flights, accommodation, meals, activities, and transport. Determines the appropriate tier (BUDGET / MID / LUXURY) and flags whether the total is within the user's budget.
+A budget analyst. Pure logic — no LLM call. Calculates a full cost breakdown across flights, accommodation, meals, activities, and transport. Determines the appropriate tier (BUDGET / MID / LUXURY) and flags whether the total is within the user's budget. After calculating the USD breakdown, delegates to `CurrencyMcpAdapter` to fetch the live exchange rate and add a local-currency equivalent (e.g. ¥748,500 ≈ $5,007 USD).
 
 ### ItineraryBuilderAgent
 The day planner. Groups geographically close attractions into the same day using neighbourhood data, picks budget-appropriate restaurants, and returns a structured `List<DayPlan>` via Spring AI's `.entity()` structured output.
@@ -294,17 +340,19 @@ All destination data (attractions, seasonal tips, cultural advice, neighbourhood
 ## Project Structure
 
 ```
+springai-advanced/                   ← travel planner (Spring Boot, port 8080)
 src/main/java/com/example/travelplanner/
 ├── agent/
 │   ├── OrchestratorAgent.java       # Parallel dispatch, budget loop, JDBC memory
 │   ├── DestinationResearchAgent.java # Regions, attractions, seasonal tips, RAG
 │   ├── LogisticsAgent.java          # Flights, transport, visa
-│   ├── BudgetAgent.java             # Cost breakdown, tier selection (no LLM)
+│   ├── BudgetAgent.java             # Cost breakdown, tier selection, currency enrichment
 │   └── ItineraryBuilderAgent.java   # Day-by-day plan, structured output
 ├── tools/
 │   ├── DestinationTools.java        # @Tool methods backed by data + PgVectorStore
 │   ├── LogisticsTools.java          # @Tool methods for flights, transport, visa
 │   ├── BudgetTools.java             # @Tool methods for cost calculations
+│   ├── CurrencyMcpAdapter.java      # MCP client — calls currency server, falls back to static rates
 │   └── ItineraryTools.java          # @Tool methods for neighbourhoods, restaurants
 ├── data/
 │   ├── DestinationDataRepository.java # Loads 5 destination JSON files
@@ -317,6 +365,11 @@ src/main/java/com/example/travelplanner/
 ├── controller/
 │   └── TravelController.java        # REST endpoints
 └── model/                           # Java records: TravelPlan, DayPlan, BudgetBreakdown, AgentTrace, …
+
+currency-mcp-server/                 ← companion MCP server (Spring Boot, port 8090)
+src/main/java/com/example/currency/
+├── CurrencyMcpServerApplication.java  # Registers CurrencyService as MCP ToolCallbackProvider
+└── CurrencyService.java               # @Tool getExchangeRate — calls api.exchangerate-api.com
 
 src/main/resources/
 ├── application.properties
@@ -339,11 +392,25 @@ mvn test
 ```
 
 ```
-BudgetToolsTest          8 tests  — tier selection, cost maths, seasonal flight surcharges
-BudgetAgentTest          5 tests  — retry loop logic, tier ordering
-DestinationDataRepositoryTest  13 tests  — all 5 destinations, edge cases
-BudgetDataRepositoryTest  8 tests  — rate hierarchy, unknown destinations
-TravelControllerTest     6 tests  — MockMvc, all endpoints
+BudgetToolsTest                8 tests  — tier selection, cost maths, seasonal flight surcharges
+BudgetAgentTest                8 tests  — retry loop, tier ordering, JPY/EUR currency enrichment
+CurrencyMcpAdapterTest        11 tests  — destination→currency mapping, fallback rates, field preservation
+DestinationDataRepositoryTest 13 tests  — all 5 destinations, edge cases
+BudgetDataRepositoryTest       8 tests  — rate hierarchy, unknown destinations
+TravelControllerTest           6 tests  — MockMvc, all endpoints
 
-Total: 40 tests, 0 failures
+Travel planner total: 54 tests, 0 failures
+
+CurrencyServiceTest  (currency-mcp-server)
+                       6 tests  — rate lookup, case insensitivity, unknown currency fallback
+```
+
+Run tests for each module separately:
+
+```bash
+# Travel planner
+mvn test
+
+# Currency MCP server
+cd currency-mcp-server && mvn test
 ```

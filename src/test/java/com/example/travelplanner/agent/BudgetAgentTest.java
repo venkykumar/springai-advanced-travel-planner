@@ -6,13 +6,17 @@ import com.example.travelplanner.data.LogisticsDataRepository;
 import com.example.travelplanner.model.budget.BudgetBreakdown;
 import com.example.travelplanner.model.budget.BudgetTier;
 import com.example.travelplanner.tools.BudgetTools;
+import com.example.travelplanner.tools.CurrencyMcpAdapter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * BudgetAgent tests — no LLM calls, BudgetAgent delegates directly to BudgetTools.
+ * BudgetAgent tests — no LLM calls, no MCP server needed.
+ * CurrencyMcpAdapter is created with an empty client list, so fallback rates are used.
  */
 class BudgetAgentTest {
 
@@ -27,7 +31,9 @@ class BudgetAgentTest {
         LogisticsDataRepository logisticsRepo = new LogisticsDataRepository();
         logisticsRepo.load();
         BudgetTools tools = new BudgetTools(budgetRepo, logisticsRepo, destRepo);
-        budgetAgent = new BudgetAgent(tools);
+        // Empty MCP client list → adapter uses static fallback rates (no server needed in tests)
+        CurrencyMcpAdapter currencyAdapter = new CurrencyMcpAdapter(List.of());
+        budgetAgent = new BudgetAgent(tools, currencyAdapter);
     }
 
     @Test
@@ -38,13 +44,11 @@ class BudgetAgentTest {
 
     @Test
     void budgetValidationLoopLogic_overBudgetThenRetry() {
-        // Force MID tier on a tight budget — this will be over budget
         BudgetBreakdown midTier = budgetAgent.recalculateForTier(
                 "France (Paris)", 4, 7, 2000.0, "july", BudgetTier.MID);
         assertThat(midTier.tier()).isEqualTo(BudgetTier.MID);
         assertThat(midTier.isWithinBudget()).isFalse();
 
-        // Simulate orchestrator's retry — downgrade to BUDGET
         BudgetBreakdown retry = budgetAgent.recalculateForTier(
                 "France (Paris)", 4, 7, 2000.0, "july", BudgetTier.BUDGET);
         assertThat(retry.grandTotal()).isLessThan(midTier.grandTotal());
@@ -75,5 +79,27 @@ class BudgetAgentTest {
             assertThat(bd).as("Budget calculation failed for: " + dest).isNotNull();
             assertThat(bd.grandTotal()).as("Grand total should be positive for: " + dest).isPositive();
         }
+    }
+
+    @Test
+    void japanBudgetEnrichedWithJpyFallbackRate() {
+        BudgetBreakdown bd = budgetAgent.calculateBudget("Japan", 2, 7, 8000.0, "october");
+        assertThat(bd.localCurrency()).isEqualTo("JPY");
+        assertThat(bd.exchangeRate()).isGreaterThan(1.0);
+        assertThat(bd.localCurrencyTotal()).isGreaterThan(bd.grandTotal());
+    }
+
+    @Test
+    void parisBudgetEnrichedWithEurFallbackRate() {
+        BudgetBreakdown bd = budgetAgent.calculateBudget("France (Paris)", 2, 5, 6000.0, "october");
+        assertThat(bd.localCurrency()).isEqualTo("EUR");
+        assertThat(bd.exchangeRate()).isLessThan(1.0);
+        assertThat(bd.localCurrencyTotal()).isLessThan(bd.grandTotal());
+    }
+
+    @Test
+    void localCurrencyTotalIsRoundedToWholeNumber() {
+        BudgetBreakdown bd = budgetAgent.calculateBudget("Japan", 2, 7, 8000.0, "october");
+        assertThat(bd.localCurrencyTotal()).isEqualTo(Math.round(bd.localCurrencyTotal()));
     }
 }

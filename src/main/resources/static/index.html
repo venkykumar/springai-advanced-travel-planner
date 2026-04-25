@@ -77,12 +77,14 @@
   .trace-step.parallel { background: #ebf8ff; border-left: 3px solid #4299e1; }
   .trace-step.sequential { background: #f7fafc; border-left: 3px solid #a0aec0; }
   .trace-step.retry { background: #fff5f5; border-left: 3px solid #fc8181; }
+  .trace-step.mcp { background: #f0fff4; border-left: 3px solid #48bb78; }
   .trace-agent { font-weight: 700; color: #2d3748; }
   .trace-action { color: #4a5568; font-family: monospace; }
   .trace-input { color: #718096; overflow: hidden; text-overflow: ellipsis; }
   .trace-output { color: #276749; overflow: hidden; text-overflow: ellipsis; }
   .trace-dur { text-align: right; color: #a0aec0; white-space: nowrap; }
   .parallel-badge { background: #bee3f8; color: #2c5282; font-size: 0.7rem; padding: 1px 6px; border-radius: 8px; display: inline-block; }
+  .mcp-badge { background: #c6f6d5; color: #276749; font-size: 0.7rem; padding: 1px 6px; border-radius: 8px; display: inline-block; }
   .tips-list { list-style: none; }
   .tips-list li { padding: 6px 0; font-size: 0.9rem; border-bottom: 1px solid #f0f4f8; }
   .tips-list li::before { content: "✓ "; color: #48bb78; font-weight: 700; }
@@ -95,7 +97,7 @@
 
 <div class="header">
   <h1>✈️ Travel Itinerary Planner <span class="badge">Spring AI Multi-Agent</span></h1>
-  <p>5 specialist AI agents • Parallel execution • JDBC memory • PgVector RAG • Budget ReAct loop</p>
+  <p>5 specialist AI agents • Parallel execution • JDBC memory • PgVector RAG • Budget ReAct loop • MCP live currency rates</p>
 </div>
 
 <div class="container">
@@ -205,6 +207,7 @@ const spinnerMessages = [
   'LogisticsAgent: checking flights and transport options...',
   'BudgetAgent: calculating cost breakdown and tier...',
   'Checking if budget fits — may re-query for lower tier...',
+  'CurrencyMcpAdapter: fetching live exchange rate...',
   'ItineraryBuilderAgent: building day-by-day schedule...',
   'OrchestratorAgent: synthesising final travel plan...'
 ];
@@ -320,13 +323,17 @@ function renderResult(response) {
     const tier = bd.tier || 'MID';
     const withinClass = bd.isWithinBudget ? 'within-budget-yes' : 'within-budget-no';
     const withinText = bd.isWithinBudget ? '✓ Within Budget' : '✗ Over Budget';
+    const localCurrencyHtml = (bd.localCurrency && bd.localCurrency !== 'USD' && bd.localCurrencyTotal > 0)
+      ? `<div class="budget-item"><div class="amount">${fmtLocal(bd.localCurrency, bd.localCurrencyTotal)}</div><div class="label">${bd.localCurrency} equiv <span style="font-size:0.7rem;color:#a0aec0">(1 USD = ${bd.exchangeRate?.toFixed(2)} ${bd.localCurrency})</span></div></div>`
+      : '';
     document.getElementById('budgetGrid').innerHTML = `
       <div class="budget-item"><div class="amount">$${fmt(bd.flightsCostTotal)}</div><div class="label">Flights (total)</div></div>
       <div class="budget-item"><div class="amount">$${fmt(bd.accommodationPerNight)}/night</div><div class="label">Accommodation</div></div>
       <div class="budget-item"><div class="amount">$${fmt(bd.mealsTotal)}</div><div class="label">Meals (total)</div></div>
       <div class="budget-item"><div class="amount">$${fmt(bd.activitiesTotal)}</div><div class="label">Activities</div></div>
       <div class="budget-item"><div class="amount">$${fmt(bd.grandTotal)}</div><div class="label">Grand Total <span class="budget-tier tier-${tier}">${tier}</span></div></div>
-      <div class="budget-item"><div class="amount ${withinClass}">${withinText}</div><div class="label">$${fmt(Math.abs(bd.budgetRemaining))} ${bd.budgetRemaining >= 0 ? 'remaining' : 'over'}</div></div>`;
+      <div class="budget-item"><div class="amount ${withinClass}">${withinText}</div><div class="label">$${fmt(Math.abs(bd.budgetRemaining))} ${bd.budgetRemaining >= 0 ? 'remaining' : 'over'}</div></div>
+      ${localCurrencyHtml}`;
     document.getElementById('tradeOffNotes').textContent = bd.tradeOffNotes || '';
     document.getElementById('budgetCard').style.display = '';
   } else {
@@ -393,13 +400,18 @@ function renderResult(response) {
   // Trace
   const traceSteps = plan.agentTrace?.steps || [];
   document.getElementById('traceSteps').innerHTML = traceSteps.map(s => {
-    const cls = s.action?.includes('retry') ? 'retry' : s.parallel ? 'parallel' : 'sequential';
+    const isMcp = s.agentName === 'CurrencyMcpAdapter';
+    const cls = isMcp ? 'mcp' : s.action?.includes('retry') ? 'retry' : s.parallel ? 'parallel' : 'sequential';
+    const badge = isMcp
+      ? '<span class="mcp-badge">⇄ MCP</span>'
+      : s.parallel ? '<span class="parallel-badge">∥ parallel</span>' : '';
+    const dur = s.durationMs > 0 ? s.durationMs + 'ms' : '—';
     return `<div class="trace-step ${cls}">
-      <span class="trace-agent">${s.agentName} ${s.parallel ? '<span class="parallel-badge">∥ parallel</span>' : ''}</span>
+      <span class="trace-agent">${s.agentName} ${badge}</span>
       <span class="trace-action">${s.action}</span>
       <span class="trace-input">${s.inputSummary || ''}</span>
       <span class="trace-output">${s.outputSummary || ''}</span>
-      <span class="trace-dur">${s.durationMs}ms</span>
+      <span class="trace-dur">${dur}</span>
     </div>`;
   }).join('');
 
@@ -422,6 +434,12 @@ function toggleTrace() {
 function fmt(n) {
   if (n == null) return '0';
   return Math.round(n).toLocaleString();
+}
+
+function fmtLocal(currency, amount) {
+  const symbols = { JPY: '¥', EUR: '€', THB: '฿', GBP: '£', AUD: 'A$', CAD: 'C$' };
+  const symbol = symbols[currency] || currency + ' ';
+  return symbol + Math.round(amount).toLocaleString();
 }
 </script>
 </body>

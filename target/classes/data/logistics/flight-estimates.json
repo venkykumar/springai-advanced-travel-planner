@@ -1,9 +1,0 @@
-{
-  "flightEstimates": [
-    {"destination": "Japan", "perPersonEconomyUSD": 900, "seasonalNotes": "April (cherry blossom) prices up 20-30%. January cheapest. Book 3+ months ahead for April."},
-    {"destination": "France (Paris)", "perPersonEconomyUSD": 650, "seasonalNotes": "July-August peak adds 25%. January sales period is cheapest. Direct flights from major US cities 8-10hrs."},
-    {"destination": "Italy (Rome & Florence)", "perPersonEconomyUSD": 700, "seasonalNotes": "Easter week 15-20% premium. October shoulder season is good value. Rome has more direct flights than Florence."},
-    {"destination": "Thailand", "perPersonEconomyUSD": 950, "seasonalNotes": "December-January peak season. July (low season) cheapest. Connect via Doha, Dubai, or Singapore. 20-24hr journey."},
-    {"destination": "Spain (Barcelona)", "perPersonEconomyUSD": 600, "seasonalNotes": "July peak adds 30%. January-February cheapest. Many direct US flights (American, Iberia, Level). 9-10hrs."}
-  ]
-}

@@ -1,9 +1,0 @@
-{
-  "visaRequirements": [
-    {"destination": "Japan", "nationality": "US", "visaRequired": false, "visaType": "Visa Waiver", "costUSD": 0, "processingDays": 0, "notes": "US passport holders get 90 days visa-free. Register with JNTO optional. No ESTA equivalent needed."},
-    {"destination": "France (Paris)", "nationality": "US", "visaRequired": false, "visaType": "Visa Waiver (Schengen)", "costUSD": 0, "processingDays": 0, "notes": "90 days visa-free in Schengen area. ETIAS electronic authorization launches 2025 (~€7, apply online)."},
-    {"destination": "Italy (Rome & Florence)", "nationality": "US", "visaRequired": false, "visaType": "Visa Waiver (Schengen)", "costUSD": 0, "processingDays": 0, "notes": "Same 90-day Schengen allowance. France + Italy together count toward the 90-day limit."},
-    {"destination": "Thailand", "nationality": "US", "visaRequired": false, "visaType": "Visa Exemption", "costUSD": 0, "processingDays": 0, "notes": "US passport holders get 60 days visa-free on arrival (extended from 30 in 2024). Extendable once at immigration office for 30 more days."},
-    {"destination": "Spain (Barcelona)", "nationality": "US", "visaRequired": false, "visaType": "Visa Waiver (Schengen)", "costUSD": 0, "processingDays": 0, "notes": "90 days in Schengen area. All Schengen travel (France, Italy, Spain) counts as one 90-day allowance."}
-  ]
-}
